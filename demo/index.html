@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<title>&lt;comic-reader&gt; demo</title>
+<style>
+  comic-reader {
+    height: 400px;
+  }
+</style>
+
+<main>
+  <input id="fileInput" type="file">
+
+</main>
+
+<script type="module">
+  import ComicReader from "../index.js";
+
+  const main = document.querySelector('main');
+  let reader = new ComicReader();
+
+  fileInput.addEventListener('change', ev => {
+    reader.src = ev.target.files[0];
+  });
+
+  main.appendChild(reader);
+</script>
