@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Demo</title>
+
+<canvas id="my-canvas"></canvas>
+
+<script src="../lib/opencv.js" defer></script>
+<script type="module">
+import jsfeat from '../lib/jsfeat.js';
+import tracking from '../lib/tracking.js';
+
+const canvasNode = document.querySelector('canvas');
+let imgNode = new Image();
+imgNode.src = new URL('./WC007_02.jpg', location.toString()).toString();
+imgNode.onload = () => {
+  let ctx = canvasNode.getContext('2d');
+
+  let w = imgNode.naturalWidth;
+  let h = imgNode.naturalHeight;
+  
+  canvasNode.width = w;
+  canvasNode.height = h;
+  ctx.drawImage(imgNode, 0, 0, w, h);
+
+  methodFour(ctx, w, h);
+}
+
+function methodTwo(ctx, w, h) {
+  var imageData = ctx.getImageData(0, 0, w, h);
+
+  var gray = tracking.Image.sobel(imageData.data, w, h);
+
+  for (var i=0; i<gray.length; i++) {
+    imageData.data[i] = gray[i];
+  }        
+
+  ctx.clearRect(0, 0, canvasNode.width, canvasNode.height);
+  ctx.putImageData(imageData, 0, 0);
+}
+
+function methodThree(ctx, w, h) {
+  var imageData = ctx.getImageData(0, 0, w, h);
+  var img_u8 = new jsfeat.matrix_t(w, h, jsfeat.U8C1_t);
+
+  jsfeat.imgproc.grayscale(imageData.data, w, h, img_u8);
+
+  var r = 2;
+  var kernel_size = (r + 1) << 1;
+
+  jsfeat.imgproc.gaussian_blur(img_u8, img_u8, kernel_size, 0);
+
+
+  jsfeat.imgproc.canny(img_u8, img_u8, 100, 300);
+
+  var scaler = w;
+  if (h < scaler) {
+      scaler = h;
+  }
+
+  scaler = scaler * .4;
+
+  var h = jsfeat.imgproc.hough_transform(img_u8, 1, (Math.PI / 540), scaler);
+
+  //At this point h really are the lines we are interested in. But im going to turn them into
+  //points so I can draw them on a canvas... Just for shits and grins.
+  var lines = [];
+
+  for(let i = 0; i < h.length; i++) {
+
+    var rho = h[i][0];
+    var theta = h[i][1];
+
+    var a = Math.cos(theta);
+    var b = Math.sin(theta);
+
+    var x0 = a * rho;
+    var y0 = b * rho;
+
+    var pt1 = {};
+    pt1.x = Math.round(x0 + 1000 * (-b));
+    pt1.y = Math.round(y0 + 1000 * (a));
+    var pt2 = {};
+    pt2.x = Math.round(x0 - 1000 * (-b));
+    pt2.y = Math.round(y0 - 1000 * (a));
+
+    ctx.beginPath();
+    ctx.moveTo(pt1.x, pt2.y);
+    ctx.lineTo(pt2.x, pt2.y);
+    console.log(pt1, pt2);
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    /*
+    var line = {};
+    line.start = pt1;
+    line.end = pt2;
+    lines.push(line);
+    */
+  }
+
+  window.drawLine = function(ax, ay, bx, by) {
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  };
+
+  window.ctx = ctx;
+}
+
+function methodOne(ctx, w, h) {
+  let img_u8 = new jsfeat.matrix_t(w, h, jsfeat.U8_t | jsfeat.C1_t);
+  let imageData = ctx.getImageData(0, 0, w, h);
+
+  let corners = [];
+  let i = w*h;
+  while(--i >= 0) {
+      corners[i] = new jsfeat.keypoint_t(0,0,0,0);
+  }
+  
+  jsfeat.imgproc.grayscale(imageData.data, w, h, img_u8, jsfeat.COLOR_RGBA2GRAY);
+  jsfeat.fast_corners.set_threshold(20);
+  let count = jsfeat.fast_corners.detect(img_u8, corners, 5);
+
+  console.log("COUNT", count);
+
+  let data_u32 = new Uint32Array(imageData.data.buffer);
+  render_corners(corners, count, data_u32, w);
+
+  ctx.putImageData(imageData, 0, 0);
+
+  function render_corners(corners, count, img, step) {
+    let pix = (0xff << 24) | (0x00 << 16) | (0xff << 8) | 0x00;
+    for(i=0; i < count; ++i) {
+        let x = corners[i].x;
+        let y = corners[i].y;
+        let off = (x + y * step);
+        img[off] = pix;
+        img[off-1] = pix;
+        img[off+1] = pix;
+        img[off-step] = pix;
+        img[off+step] = pix;
+    }
+  }
+}
+
+function methodFour() {
+  let img = cv.imread('my-canvas');
+  let gray = new cv.Mat();
+  cv.cvtColor(img, gray, cv.COLOR_BGR2GRAY, 0);
+
+  let tmin = 150;
+  let tmax = 255;
+  
+  let thresh = new cv.Mat();
+  cv.threshold(gray, thresh, tmin,tmax,cv.THRESH_BINARY_INV);
+
+  let contours = new cv.MatVector();
+  let hierarchy = new cv.Mat();
+  cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL,
+    cv.CHAIN_APPROX_SIMPLE);
+
+  debugger;
+
+  for(let contour of contours) {
+    console.log(contour);
+  }
+  //cv.imshow('my-canvas', dest);
+}
+</script>

@@ -1,12 +1,16 @@
 {
   "name": "comic-reader",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "A comic reader web component",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "files": [
+    "index.js",
+    "lib"
+  ],
   "keywords": [],
-  "author": "",
+  "author": "Matthew Phillips <matthew@matthewphillips.info>",
   "license": "BSD-2-Clause"
 }
