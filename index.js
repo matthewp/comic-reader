@@ -90,26 +90,23 @@ template.innerHTML = /* html */ `
       outline: none;
     }
 
-    img {
-      /* Not important now but eventually figure this out. */
-      /*transition: width 3s ease-in-out;*/
+    #viewer {
+      overflow: scroll;
     }
 
     .fit-height {
-      height: fit-content;
+      height: 100vh;
       display: flex;
       justify-content: center;
     }
 
     .fit-height canvas {
-      max-height: 100%;
-      height: 100%;
-      overflow: scroll;
+      height: 100vh;
     }
 
     .fit-width {
       height: 100%;
-      overflow: scroll;
+      width: 100vw;
     }
 
     .fit-width canvas {
@@ -142,8 +139,8 @@ template.innerHTML = /* html */ `
       <progress value="0" max="100"></progress>
     </div>
     <div id="viewer" class="fit-width">
-      <canvas class="current"></canvas>
-      <canvas></canvas>
+      <canvas id="current"></canvas>
+      <canvas id="next"></canvas>
     </div>
   </div>
 `;
@@ -178,11 +175,13 @@ function init(shadow) {
   let fullscreenBtn = frag.querySelector('#fullscreen');
   let expandNode = fullscreenBtn.firstElementChild;
   let contractNode = contractSVG();
-  let canvasNode = frag.querySelector('canvas.current');
+  let canvasNode = frag.querySelector('canvas#current');
+  let nextCanvasNode = frag.querySelector('canvas#next');
 
   /* State variables */
   let src, book;
   let updateCanvas = canvasView(canvasNode);
+  let updateNextCanvas = canvasView(nextCanvasNode);
 
   /* DOM update functions */
   function setProgressNode(value) {
@@ -233,6 +232,11 @@ function init(shadow) {
     let url = await book.nextPage(setProgressNode);
     await updateCanvas({ url });
     setProgressContainerNode(false);
+
+    /*if(book.canAdvance()) {
+      let nextUrl = await book.peek(book.nextPageNumber());
+      console.log(nextUrl)
+    }*/
   }
 
   async function loadPreviousPage() {
@@ -248,6 +252,11 @@ function init(shadow) {
     await book.load();
     await loadPage(0);
     book.preloadIdle();
+
+    if(book.canAdvance()) {
+      let nextUrl = await book.peek(book.nextPageNumber());
+      updateNextCanvas({ url: nextUrl });
+    }
   }
 
   function closeBook() {
@@ -312,6 +321,7 @@ function init(shadow) {
     updateCanvas.connect();
     canvasNode.addEventListener('nav-previous', onNavPrevious);
     canvasNode.addEventListener('nav-next', onNavNext);
+    canvasNode.addEventListener('controls', toggleControlsOpen);
     fitHeightBtn.addEventListener('click', onFitHeightClick);
     fitWidthBtn.addEventListener('click', onFitWidthClick);
     fullscreenBtn.addEventListener('click', onFullscreenClick);
@@ -322,6 +332,7 @@ function init(shadow) {
     updateCanvas.disconnect();
     canvasNode.removeEventListener('nav-previous', onNavPrevious);
     canvasNode.removeEventListener('nav-next', onNavNext);
+    canvasNode.removeEventListener('controls', toggleControlsOpen);
     fitHeightBtn.removeEventListener('click', onFitHeightClick);
     fitWidthBtn.removeEventListener('click', onFitWidthClick);
     fullscreenBtn.removeEventListener('click', onFullscreenClick);
