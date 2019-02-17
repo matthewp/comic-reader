@@ -1,4 +1,5 @@
 import { ZipBook } from './lib/pzip.js';
+import canvasView from './lib/canvas-view.js';
 
 const template = document.createElement('template');
 template.innerHTML = /* html */ `
@@ -142,6 +143,7 @@ template.innerHTML = /* html */ `
     </div>
     <div id="viewer" class="fit-width">
       <canvas class="current"></canvas>
+      <canvas></canvas>
     </div>
   </div>
 `;
@@ -168,21 +170,19 @@ function init(shadow) {
   let frag = clone();
   let rootNode = frag.querySelector('#root');
   let viewerNode = frag.querySelector('#viewer');
-  let canvasNode = frag.querySelector('canvas');
   let controlsNode = frag.querySelector('.controls');
   let progressNode = frag.querySelector('progress');
   let progressContainerNode = frag.querySelector('.progress-container');
   let fitHeightBtn = frag.querySelector('#fit-height');
   let fitWidthBtn = frag.querySelector('#fit-width');
   let fullscreenBtn = frag.querySelector('#fullscreen');
-  let imgNode = document.createElement('img');
-  let ctx = canvasNode.getContext('2d');
   let expandNode = fullscreenBtn.firstElementChild;
   let contractNode = contractSVG();
+  let canvasNode = frag.querySelector('canvas.current');
 
   /* State variables */
   let src, book;
-  let panelMode = false;
+  let updateCanvas = canvasView(canvasNode);
 
   /* DOM update functions */
   function setProgressNode(value) {
@@ -191,10 +191,6 @@ function init(shadow) {
 
   function setProgressContainerNode(loading) {
     progressContainerNode.classList[loading ? 'add' : 'remove']('open');
-  }
-
-  function setImgNode(value) {
-    imgNode.src = value;
   }
 
   function setViewerDisplay(cn) {
@@ -224,56 +220,27 @@ function init(shadow) {
   }
 
   /* Logic functions */
-  function wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  function waitOnImg(img) {
-    return new Promise(resolve => {
-      if(img.naturalHeight) {
-        resolve(img);
-      } else {
-        img.onload = function() {
-          resolve(img);
-        };
-      }
-    });
-  }
-
-  async function setCanvasURL(url) {
-    setImgNode(url);
-    await wait(0);
-    await waitOnImg(imgNode);
-
-    let w = imgNode.naturalWidth;
-    let h = imgNode.naturalHeight;
-    
-    canvasNode.width = w;
-    canvasNode.height = h;
-    ctx.drawImage(imgNode, 0, 0, w, h);
-  }
-
   async function loadPage(i) {
     setProgressContainerNode(true);
     let url = await book.goto(i, setProgressNode);
     setProgressContainerNode(false);
-    setCanvasURL(url);
+    updateCanvas({ url });
   }
 
   async function loadNextPage() {
     if(!book) return;
     setProgressContainerNode(true);
     let url = await book.nextPage(setProgressNode);
+    await updateCanvas({ url });
     setProgressContainerNode(false);
-    setCanvasURL(url);
   }
 
   async function loadPreviousPage() {
     if(!book) return;
     setProgressContainerNode(true);
     let url = await book.previousPage(setProgressNode);
+    await updateCanvas({ url });
     setProgressContainerNode(false);
-    setCanvasURL(url);
   }
 
   async function loadSrc() {
@@ -289,37 +256,17 @@ function init(shadow) {
     }
   }
 
-  function getClickPosition(ev) {
-    let w = canvasNode.offsetWidth;
-    let third = w / 3;
-    let x = ev.offsetX;
-    return x < third ? 0 : x > (third * 2) ? 2 : 1;
-  }
-
   function scheduleControlsOff() {
     setTimeout(setControlsOpen, 2000, false);
   }
 
   /* Event listeners */
-  function onImgDlbClick(ev) {
-    let w = imgNode.naturalWidth;
-    let h = w / 2;
-    if(ev.offsetX < h) {
-      loadPreviousPage();
-    } else {
-      loadNextPage();
-    }
+  function onNavPrevious() {
+    loadPreviousPage();
   }
 
-  function onImgClick(ev) {
-    switch(getClickPosition(ev)) {
-      case 0:
-      case 2:
-        break;
-      case 1:
-        toggleControlsOpen();
-        break;
-    }
+  function onNavNext() {
+    loadNextPage();
   }
 
   function onFitHeightClick() {
@@ -362,8 +309,9 @@ function init(shadow) {
 
   /* Initialization */
   function connect() {
-    canvasNode.addEventListener('click', onImgClick);
-    canvasNode.addEventListener('dblclick', onImgDlbClick);
+    updateCanvas.connect();
+    canvasNode.addEventListener('nav-previous', onNavPrevious);
+    canvasNode.addEventListener('nav-next', onNavNext);
     fitHeightBtn.addEventListener('click', onFitHeightClick);
     fitWidthBtn.addEventListener('click', onFitWidthClick);
     fullscreenBtn.addEventListener('click', onFullscreenClick);
@@ -371,8 +319,9 @@ function init(shadow) {
   }
 
   function disconnect() {
-    canvasNode.removeEventListener('click', onImgClick);
-    canvasNode.removeEventListener('dblclick', onImgClick);
+    updateCanvas.disconnect();
+    canvasNode.removeEventListener('nav-previous', onNavPrevious);
+    canvasNode.removeEventListener('nav-next', onNavNext);
     fitHeightBtn.removeEventListener('click', onFitHeightClick);
     fitWidthBtn.removeEventListener('click', onFitWidthClick);
     fullscreenBtn.removeEventListener('click', onFullscreenClick);
