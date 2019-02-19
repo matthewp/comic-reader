@@ -11,6 +11,7 @@ template.innerHTML = /* html */ `
 
     #root {
       height: 100%;
+      width: 100%;
       position: relative;
       background-color: var(--white);
     }
@@ -26,6 +27,7 @@ template.innerHTML = /* html */ `
       grid-template-columns: 1fr 1fr;
       transition: opacity 1s;
       opacity: 0;
+      z-index: 1;
     }
 
     .top-pane.open {
@@ -90,26 +92,45 @@ template.innerHTML = /* html */ `
       outline: none;
     }
 
-    img {
-      /* Not important now but eventually figure this out. */
-      /*transition: width 3s ease-in-out;*/
+    #viewport {
+      overflow-y: scroll;
+      overflow-x: hidden;
+      height: 100%;
+      width: 100%;
+    }
+
+    #viewer {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      --x: 0;
+      transform: translateX(var(--x));
+    }
+
+    #viewer:not(.updating) {
+      transition: transform .3s ease-out;
     }
 
     .fit-height {
-      height: fit-content;
-      display: flex;
+      height: 100%;
+      width: 100%;
       justify-content: center;
     }
 
     .fit-height canvas {
-      max-height: 100%;
       height: 100%;
-      overflow: scroll;
+    }
+
+    .fit-height .current {
+      grid-column: 1 / 6;
+      justify-self: center;
+    }
+
+    .fit-height :not(.current) {
+      display: none;
     }
 
     .fit-width {
-      height: 100%;
-      overflow: scroll;
+      width: 500%;
     }
 
     .fit-width canvas {
@@ -141,9 +162,14 @@ template.innerHTML = /* html */ `
     <div class="progress-container">
       <progress value="0" max="100"></progress>
     </div>
-    <div id="viewer" class="fit-width">
-      <canvas class="current"></canvas>
-      <canvas></canvas>
+    <div id="viewport">
+      <div id="viewer" class="fit-width">
+        <canvas class="current"></canvas>
+        <canvas></canvas>
+        <canvas></canvas>
+        <canvas></canvas>
+        <canvas></canvas>
+      </div>
     </div>
   </div>
 `;
@@ -178,11 +204,22 @@ function init(shadow) {
   let fullscreenBtn = frag.querySelector('#fullscreen');
   let expandNode = fullscreenBtn.firstElementChild;
   let contractNode = contractSVG();
-  let canvasNode = frag.querySelector('canvas.current');
+  let canvases = frag.querySelectorAll('canvas');
+
+  /* DOM views */
+  let updateCurrent;
+  let updateCanvases = [];
+  let canvasToUpdate = new WeakMap();
+  for(let canvas of canvases) {
+    let update = canvasView(canvas)
+    updateCanvases.push(update);
+    canvasToUpdate.set(canvas, update);
+  }
+  updateCurrent = updateCanvases[0];
 
   /* State variables */
-  let src, book;
-  let updateCanvas = canvasView(canvasNode);
+  let src, book, numberOfPages;
+  let viewerX = 0, current = 0, currentPage = 0;
 
   /* DOM update functions */
   function setProgressNode(value) {
@@ -211,6 +248,26 @@ function init(shadow) {
     controlsNode.classList[open ? 'add' : 'remove']('open');
   }
 
+  function translateViewerNode() {
+    viewerNode.style.setProperty('--x', `${viewerX}%`);
+  }
+
+  function setViewerUpdating(isUpdating) {
+    viewerNode.classList[isUpdating ? 'add' : 'remove']('updating');
+  }
+
+  function rotateCanvasNode(first) {
+    if(first) {
+      let node = viewerNode.firstElementChild;
+      viewerNode.appendChild(node);
+      return node;
+    } else {
+      let node = viewerNode.lastElementChild;
+      viewerNode.insertBefore(node, viewerNode.firstElementChild);
+      return node;
+    }
+  }
+
   /* State update functions */
   function setSrc(value) {
     if(src !== value) {
@@ -219,35 +276,78 @@ function init(shadow) {
     }
   }
 
+  function setViewerX(value) {
+    if(viewerX !== value) {
+      viewerX = value;
+      translateViewerNode();
+    }
+  }
+
+  function setCurrent(value) {
+    if(value !== current) {
+      if(value < 5) {
+        current = value;
+      } else {
+        current = 0;
+      }
+    }
+  }
+
+  function setCurrentPage(value) {
+    if(value !== currentPage) {
+      if(value >= 0) {
+        let oldValue = currentPage;
+        currentPage = value;
+        // If we're going up
+        if(oldValue < value) {
+          incrementViewerX(-20);
+        } else {
+          incrementViewerX(20);
+        }
+      }
+    }
+  }
+
+  function incrementViewerX(by) {
+    let newValue = viewerX + by;
+    if(newValue <= 0) {
+      setViewerX(newValue);
+    }
+  }
+
   /* Logic functions */
+  async function loadInto(i, updateCanvas) {
+    let url = await book.goto(i);
+    updateCanvas({ url, page: i });
+  }
+
   async function loadPage(i) {
     setProgressContainerNode(true);
     let url = await book.goto(i, setProgressNode);
     setProgressContainerNode(false);
-    updateCanvas({ url });
-  }
-
-  async function loadNextPage() {
-    if(!book) return;
-    setProgressContainerNode(true);
-    let url = await book.nextPage(setProgressNode);
-    await updateCanvas({ url });
-    setProgressContainerNode(false);
-  }
-
-  async function loadPreviousPage() {
-    if(!book) return;
-    setProgressContainerNode(true);
-    let url = await book.previousPage(setProgressNode);
-    await updateCanvas({ url });
-    setProgressContainerNode(false);
+    updateCurrent({ url, page: i });
   }
 
   async function loadSrc() {
-    book = new ZipBook(src);
+    let blob = src;
+    if(typeof src === 'string') {
+      let url = new URL(src, location.href).toString();
+      let res = await fetch(url);
+      blob = await res.blob();
+    }
+
+    book = new ZipBook(blob);
     await book.load();
+    numberOfPages = book.getLength();
     await loadPage(0);
     book.preloadIdle();
+
+    for(let i = 1; i < 5; i++) {
+      if(book.canAdvanceTo(i)) {
+        let nextUrl = await book.peek(i);
+        updateCanvases[i]({ url: nextUrl, page: i });
+      }
+    }
   }
 
   function closeBook() {
@@ -260,13 +360,59 @@ function init(shadow) {
     setTimeout(setControlsOpen, 2000, false);
   }
 
+  function navigateToNext() {
+    setCurrentPage(currentPage + 1);
+    setCurrent(current + 1);
+  }
+
+  function navigateToPrevious() {
+    setCurrentPage(currentPage - 1);
+    setCurrent(current - 1);
+  }
+
+  function rotatePage() {
+    for(let i = 0; i < updateCanvases.length; i++) {
+      let updateCanvas = updateCanvases[i];
+      updateCanvas({ current: i === current });
+    }
+    
+    let i = 0;
+    let currentIndex = 0;
+    for(let canvas of viewerNode.children) {
+      if(canvas.classList.contains('current')) {
+        currentIndex = i;
+        break;
+      }
+      i++;
+    }
+
+    // Move last canvas to before
+    if(currentIndex === 1 && currentPage > 1) {
+      setViewerUpdating(true);
+      let canvas = rotateCanvasNode(false);
+      incrementViewerX(-20);
+      setTimeout(setViewerUpdating, 0, false);
+      let updateCanvas = canvasToUpdate.get(canvas);
+      loadInto(currentPage - 2, updateCanvas);
+    }
+    // Move first canvas to last
+    else if(currentIndex === 3 && currentPage + 2 < numberOfPages) {
+      setViewerUpdating(true);
+      let canvas = rotateCanvasNode(true);
+      incrementViewerX(20);
+      setTimeout(setViewerUpdating, 0, false);
+      let updateCanvas = canvasToUpdate.get(canvas);
+      loadInto(currentPage + 2, updateCanvas);
+    }
+  }
+
   /* Event listeners */
   function onNavPrevious() {
-    loadPreviousPage();
+    navigateToPrevious();
   }
 
   function onNavNext() {
-    loadNextPage();
+    navigateToNext();
   }
 
   function onFitHeightClick() {
@@ -281,11 +427,11 @@ function init(shadow) {
     switch(ev.keyCode) {
       // Left
       case 37:
-        loadPreviousPage();
+        navigateToPrevious();
         break;
       // Right
       case 39:
-        loadNextPage();
+        navigateToNext();
         break;
     }
   }
@@ -307,21 +453,34 @@ function init(shadow) {
     }
   }
 
+  function onViewerTransition() {
+    rotatePage();
+  }
+
   /* Initialization */
   function connect() {
-    updateCanvas.connect();
-    canvasNode.addEventListener('nav-previous', onNavPrevious);
-    canvasNode.addEventListener('nav-next', onNavNext);
+    for(let updateCanvas of updateCanvases) {
+      updateCanvas.connect();
+      updateCanvas.node.addEventListener('nav-previous', onNavPrevious);
+      updateCanvas.node.addEventListener('nav-next', onNavNext);
+      updateCanvas.node.addEventListener('controls', toggleControlsOpen);
+    }
+    
     fitHeightBtn.addEventListener('click', onFitHeightClick);
     fitWidthBtn.addEventListener('click', onFitWidthClick);
     fullscreenBtn.addEventListener('click', onFullscreenClick);
     rootNode.addEventListener('keyup', onKeyUp);
+    viewerNode.addEventListener('transitionend', onViewerTransition);
   }
 
   function disconnect() {
-    updateCanvas.disconnect();
-    canvasNode.removeEventListener('nav-previous', onNavPrevious);
-    canvasNode.removeEventListener('nav-next', onNavNext);
+    for(let updateCanvas of updateCanvases) {
+      updateCanvas.disconnect();
+      updateCanvas.node.removeEventListener('nav-previous', onNavPrevious);
+      updateCanvas.node.removeEventListener('nav-next', onNavNext);
+      updateCanvas.node.removeEventListener('controls', toggleControlsOpen);
+    }
+
     fitHeightBtn.removeEventListener('click', onFitHeightClick);
     fitWidthBtn.removeEventListener('click', onFitWidthClick);
     fullscreenBtn.removeEventListener('click', onFullscreenClick);
@@ -334,19 +493,8 @@ function init(shadow) {
     return frag;
   }
 
-  Object.defineProperties(update, {
-    connect: {
-      value: connect
-    },
-    disconnect: {
-      value: disconnect
-    },
-    src: {
-      get() {
-        return src;
-      }
-    }
-  });
+  update.connect = connect;
+  update.disconnect = disconnect;
 
   return update;
 }
@@ -354,15 +502,20 @@ function init(shadow) {
 const VIEW = Symbol('comic-reader.view');
 
 class ComicReader extends HTMLElement {
+  static get observedAttributes() {
+    return ['src'];
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this._src = null;
   }
 
   connectedCallback() {
     if(!this[VIEW]) {
       let update = this[VIEW] = init(this.shadowRoot);
-      let frag = update({ });
+      let frag = update({ src: this._src });
       this.shadowRoot.appendChild(frag);
     }
     this[VIEW].connect();
@@ -372,12 +525,18 @@ class ComicReader extends HTMLElement {
     this[VIEW].disconnect();
   }
 
+  attributeChangedCallback(name, _, newVal) {
+    this[name] = newVal;
+  }
+
   get src() {
-    return this[VIEW].src;
+    return this._src;
   }
 
   set src(src) {
-    this[VIEW]({ src });
+    this._src = src;
+    if(this[VIEW])
+      this[VIEW]({ src });
   }
 }
 
