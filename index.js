@@ -24,6 +24,7 @@ template.innerHTML = /* html */ `
       right: 0;
       padding: 0.75em;
       display: grid;
+      user-select: none;
       grid-template-columns: 1fr 1fr;
       transition: opacity 1s;
       opacity: 0;
