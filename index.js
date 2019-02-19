@@ -31,7 +31,8 @@ template.innerHTML = /* html */ `
       z-index: 1;
     }
 
-    .top-pane.open {
+    .top-pane.open,
+    .top-pane:focus-within {
       opacity: 1;
     }
 
