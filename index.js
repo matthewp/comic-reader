@@ -1,4 +1,3 @@
-import { ZipBook } from './lib/pzip.js';
 import canvasView from './lib/canvas-view.js';
 
 const template = document.createElement('template');
@@ -220,8 +219,8 @@ function init(shadow) {
   updateCurrent = updateCanvases[0];
 
   /* State variables */
-  let src, book, numberOfPages;
-  let viewerX = 0, current = 0, currentPage = 0;
+  let src, source;
+  let viewerX = 0, current = 0, currentPage = 0, numberOfItemsLoaded = 0;
 
   /* DOM update functions */
   function setProgressNode(value) {
@@ -318,14 +317,26 @@ function init(shadow) {
   }
 
   /* Logic functions */
+  async function preloadIdle() {
+    requestIdleCallback(preload);
+  }
+
+  async function preload() {
+    if(source.getLength() > numberOfItemsLoaded) {
+      await source.item(numberOfItemsLoaded);
+      numberOfItemsLoaded++;
+      requestIdleCallback(preload);
+    }
+  }
+
   async function loadInto(i, updateCanvas) {
-    let url = await book.goto(i);
+    let url = await source.item(i);
     updateCanvas({ url, page: i });
   }
 
   async function loadPage(i) {
     setProgressContainerNode(true);
-    let url = await book.goto(i, setProgressNode);
+    let url = await source.item(i, setProgressNode);
     setProgressContainerNode(false);
     updateCurrent({ url, page: i });
   }
@@ -336,25 +347,27 @@ function init(shadow) {
       let url = new URL(src, location.href).toString();
       let res = await fetch(url);
       blob = await res.blob();
+    } else if(typeof src === 'object' && !(src instanceof Blob)) {
+      source = src;
+    } else {
+      const { default: ZipSource } = await import('./lib/zipsource.js');
+      source = new ZipSource(blob);
     }
-
-    book = new ZipBook(blob);
-    await book.load();
-    numberOfPages = book.getLength();
+    
     await loadPage(0);
-    book.preloadIdle();
+    preloadIdle();
 
     for(let i = 1; i < 5; i++) {
-      if(book.canAdvanceTo(i)) {
-        let nextUrl = await book.peek(i);
+      if(source.getLength() > i) {
+        let nextUrl = await source.item(i);
         updateCanvases[i]({ url: nextUrl, page: i });
       }
     }
   }
 
   function closeBook() {
-    if(book) {
-      book.close();
+    if(source && source.close) {
+      source.close();
     }
   }
 
@@ -398,7 +411,7 @@ function init(shadow) {
       loadInto(currentPage - 2, updateCanvas);
     }
     // Move first canvas to last
-    else if(currentIndex === 3 && currentPage + 2 < numberOfPages) {
+    else if(currentIndex === 3 && currentPage + 2 < source.getLength()) {
       setViewerUpdating(true);
       let canvas = rotateCanvasNode(true);
       incrementViewerX(20);
