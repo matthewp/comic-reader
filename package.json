@@ -14,6 +14,7 @@
   "author": "Matthew Phillips <matthew@matthewphillips.info>",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "libarchive.js": "^1.0.1"
+    "libarchive.js": "^1.0.1",
+    "testee": "^0.9.0"
   }
 }
