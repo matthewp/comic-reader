@@ -12,5 +12,8 @@
   ],
   "keywords": [],
   "author": "Matthew Phillips <matthew@matthewphillips.info>",
-  "license": "BSD-2-Clause"
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "libarchive.js": "^1.0.1"
+  }
 }
