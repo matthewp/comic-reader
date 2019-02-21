@@ -1,4 +1,4 @@
-import canvasView from './lib/canvas-view.js';
+import './lib/page.js';
 
 const template = document.createElement('template');
 template.innerHTML = /* html */ `
@@ -93,16 +93,9 @@ template.innerHTML = /* html */ `
       outline: none;
     }
 
-    #viewport {
-      overflow-y: scroll;
-      overflow-x: hidden;
-      height: 100%;
-      width: 100%;
-    }
-
     #viewer {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      display: flex;
+      height: 100%;
       --x: 0;
       transform: translateX(var(--x));
     }
@@ -117,7 +110,7 @@ template.innerHTML = /* html */ `
       justify-content: center;
     }
 
-    .fit-height canvas {
+    .fit-height comic-reader-page {
       height: 100%;
     }
 
@@ -134,7 +127,7 @@ template.innerHTML = /* html */ `
       width: 500%;
     }
 
-    .fit-width canvas {
+    .fit-width comic-reader-page {
       width: 100%;
     }
   </style>
@@ -163,14 +156,12 @@ template.innerHTML = /* html */ `
     <div class="progress-container">
       <progress value="0" max="100"></progress>
     </div>
-    <div id="viewport">
-      <div id="viewer" class="fit-width">
-        <canvas class="current"></canvas>
-        <canvas></canvas>
-        <canvas></canvas>
-        <canvas></canvas>
-        <canvas></canvas>
-      </div>
+    <div id="viewer" class="fit-width">
+      <comic-reader-page></comic-reader-page>
+      <comic-reader-page></comic-reader-page>
+      <comic-reader-page></comic-reader-page>
+      <comic-reader-page></comic-reader-page>
+      <comic-reader-page></comic-reader-page>
     </div>
   </div>
 `;
@@ -205,18 +196,8 @@ function init(shadow) {
   let fullscreenBtn = frag.querySelector('#fullscreen');
   let expandNode = fullscreenBtn.firstElementChild;
   let contractNode = contractSVG();
-  let canvases = frag.querySelectorAll('canvas');
-
-  /* DOM views */
-  let updateCurrent;
-  let updateCanvases = [];
-  let canvasToUpdate = new WeakMap();
-  for(let canvas of canvases) {
-    let update = canvasView(canvas)
-    updateCanvases.push(update);
-    canvasToUpdate.set(canvas, update);
-  }
-  updateCurrent = updateCanvases[0];
+  let readerPageNodes = frag.querySelectorAll('comic-reader-page');
+  let currentReaderPageNode = readerPageNodes[0];
 
   /* State variables */
   let src, source;
@@ -257,7 +238,7 @@ function init(shadow) {
     viewerNode.classList[isUpdating ? 'add' : 'remove']('updating');
   }
 
-  function rotateCanvasNode(first) {
+  function rotateReaderPageNode(first) {
     if(first) {
       let node = viewerNode.firstElementChild;
       viewerNode.appendChild(node);
@@ -267,6 +248,10 @@ function init(shadow) {
       viewerNode.insertBefore(node, viewerNode.firstElementChild);
       return node;
     }
+  }
+
+  function setReaderPageCurrent(readerPage, isCurrent) {
+    readerPage.classList[isCurrent ? 'add' : 'remove']('current');
   }
 
   /* State update functions */
@@ -329,16 +314,19 @@ function init(shadow) {
     }
   }
 
-  async function loadInto(i, updateCanvas) {
+  async function loadInto(i, readerPage) {
     let url = await source.item(i);
-    updateCanvas({ url, page: i });
+    readerPage.dataset.page = i;
+    readerPage.url = url;
   }
 
   async function loadPage(i) {
     setProgressContainerNode(true);
     let url = await source.item(i, setProgressNode);
     setProgressContainerNode(false);
-    updateCurrent({ url, page: i });
+
+    currentReaderPageNode.dataset.page = i;
+    currentReaderPageNode.url = url;
   }
 
   async function loadSrc() {
@@ -360,7 +348,9 @@ function init(shadow) {
     for(let i = 1; i < 5; i++) {
       if(source.getLength() > i) {
         let nextUrl = await source.item(i);
-        updateCanvases[i]({ url: nextUrl, page: i });
+        let readerPage = readerPageNodes[i];
+        readerPage.dataset.page = i;
+        readerPage.url = nextUrl;
       }
     }
   }
@@ -386,38 +376,35 @@ function init(shadow) {
   }
 
   function rotatePage() {
-    for(let i = 0; i < updateCanvases.length; i++) {
-      let updateCanvas = updateCanvases[i];
-      updateCanvas({ current: i === current });
+    for(let i = 0; i < readerPageNodes.length; i++) {
+      setReaderPageCurrent(readerPageNodes[i], i === current);
     }
     
     let i = 0;
     let currentIndex = 0;
-    for(let canvas of viewerNode.children) {
-      if(canvas.classList.contains('current')) {
+    for(let readerPage of viewerNode.children) {
+      if(readerPage.classList.contains('current')) {
         currentIndex = i;
         break;
       }
       i++;
     }
 
-    // Move last canvas to before
+    // Move last reader-page to before
     if(currentIndex === 1 && currentPage > 1) {
       setViewerUpdating(true);
-      let canvas = rotateCanvasNode(false);
+      let readerPage = rotateReaderPageNode(false);
       incrementViewerX(-20);
       setTimeout(setViewerUpdating, 0, false);
-      let updateCanvas = canvasToUpdate.get(canvas);
-      loadInto(currentPage - 2, updateCanvas);
+      loadInto(currentPage - 2, readerPage);
     }
-    // Move first canvas to last
+    // Move first reader-page to last
     else if(currentIndex === 3 && currentPage + 2 < source.getLength()) {
       setViewerUpdating(true);
-      let canvas = rotateCanvasNode(true);
+      let readerPage = rotateReaderPageNode(true);
       incrementViewerX(20);
       setTimeout(setViewerUpdating, 0, false);
-      let updateCanvas = canvasToUpdate.get(canvas);
-      loadInto(currentPage + 2, updateCanvas);
+      loadInto(currentPage + 2, readerPage);
     }
   }
 
@@ -474,11 +461,10 @@ function init(shadow) {
 
   /* Initialization */
   function connect() {
-    for(let updateCanvas of updateCanvases) {
-      updateCanvas.connect();
-      updateCanvas.node.addEventListener('nav-previous', onNavPrevious);
-      updateCanvas.node.addEventListener('nav-next', onNavNext);
-      updateCanvas.node.addEventListener('controls', toggleControlsOpen);
+    for(let readerPage of readerPageNodes) {
+      readerPage.addEventListener('nav-previous', onNavPrevious);
+      readerPage.addEventListener('nav-next', onNavNext);
+      readerPage.addEventListener('controls', toggleControlsOpen);
     }
     
     fitHeightBtn.addEventListener('click', onFitHeightClick);
@@ -489,11 +475,10 @@ function init(shadow) {
   }
 
   function disconnect() {
-    for(let updateCanvas of updateCanvases) {
-      updateCanvas.disconnect();
-      updateCanvas.node.removeEventListener('nav-previous', onNavPrevious);
-      updateCanvas.node.removeEventListener('nav-next', onNavNext);
-      updateCanvas.node.removeEventListener('controls', toggleControlsOpen);
+    for(let readerPage of readerPageNodes) {
+      readerPage.removeEventListener('nav-previous', onNavPrevious);
+      readerPage.removeEventListener('nav-next', onNavNext);
+      readerPage.removeEventListener('controls', toggleControlsOpen);
     }
 
     fitHeightBtn.removeEventListener('click', onFitHeightClick);
