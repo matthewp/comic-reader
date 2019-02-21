@@ -93,6 +93,12 @@ template.innerHTML = /* html */ `
       outline: none;
     }
 
+    #viewport {
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+
     #viewer {
       display: flex;
       height: 100%;
@@ -156,12 +162,14 @@ template.innerHTML = /* html */ `
     <div class="progress-container">
       <progress value="0" max="100"></progress>
     </div>
-    <div id="viewer" class="fit-width">
-      <comic-reader-page></comic-reader-page>
-      <comic-reader-page></comic-reader-page>
-      <comic-reader-page></comic-reader-page>
-      <comic-reader-page></comic-reader-page>
-      <comic-reader-page></comic-reader-page>
+    <div id="viewport">
+      <div id="viewer" class="fit-width">
+        <comic-reader-page class="current"></comic-reader-page>
+        <comic-reader-page></comic-reader-page>
+        <comic-reader-page></comic-reader-page>
+        <comic-reader-page></comic-reader-page>
+        <comic-reader-page></comic-reader-page>
+      </div>
     </div>
   </div>
 `;
@@ -185,6 +193,7 @@ function clear(el) {
 
 function init(shadow) {
   /* DOM variables */
+  let host = this;
   let frag = clone();
   let rootNode = frag.querySelector('#root');
   let viewerNode = frag.querySelector('#viewer');
@@ -330,14 +339,16 @@ function init(shadow) {
   }
 
   async function loadSrc() {
-    let blob = src;
-    if(typeof src === 'string') {
-      let url = new URL(src, location.href).toString();
-      let res = await fetch(url);
-      blob = await res.blob();
-    } else if(typeof src === 'object' && !(src instanceof Blob)) {
+    if(typeof src === 'object' && !(src instanceof Blob)) {
       source = src;
     } else {
+      let blob = src;
+      if(typeof src === 'string') {
+        let url = new URL(src, location.href).toString();
+        let res = await fetch(url);
+        blob = await res.blob();
+      }
+
       const { default: ZipSource } = await import('./lib/zipsource.js');
       source = new ZipSource(blob);
     }
@@ -353,6 +364,8 @@ function init(shadow) {
         readerPage.url = nextUrl;
       }
     }
+
+    dispatchLoad();
   }
 
   function closeBook() {
@@ -406,6 +419,21 @@ function init(shadow) {
       setTimeout(setViewerUpdating, 0, false);
       loadInto(currentPage + 2, readerPage);
     }
+
+    dispatchPage();
+  }
+
+  /* Event dispatchers */
+  function dispatchLoad() {
+    let ev = new CustomEvent('load');
+    host.dispatchEvent(ev);
+  }
+
+  function dispatchPage() {
+    let ev = new CustomEvent('page', {
+      detail: currentPage + 1 // Make it human readable
+    });
+    host.dispatchEvent(ev);
   }
 
   /* Event listeners */
@@ -514,7 +542,7 @@ class ComicReader extends HTMLElement {
 
   connectedCallback() {
     if(!this[VIEW]) {
-      let update = this[VIEW] = init(this.shadowRoot);
+      let update = this[VIEW] = init.call(this, this.shadowRoot);
       let frag = update({ src: this._src });
       this.shadowRoot.appendChild(frag);
     }
