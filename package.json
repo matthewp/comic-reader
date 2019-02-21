@@ -4,7 +4,7 @@
   "description": "A comic reader web component",
   "main": "index.js",
   "scripts": {
-    "test": "testee --browsers chrome test/test.html"
+    "test": "testee --browsers chrome test/test.html --config=testee.json"
   },
   "files": [
     "index.js",
