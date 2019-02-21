@@ -4,7 +4,7 @@
   "description": "A comic reader web component",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "testee --browsers chrome test/test.html --config=testee.json"
   },
   "files": [
     "index.js",
@@ -14,6 +14,7 @@
   "author": "Matthew Phillips <matthew@matthewphillips.info>",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "libarchive.js": "^1.0.1"
+    "libarchive.js": "^1.0.1",
+    "testee": "^0.9.0"
   }
 }
