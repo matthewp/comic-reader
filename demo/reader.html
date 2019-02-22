@@ -17,3 +17,11 @@
 <main>
   <comic-reader src="./demo.cbz"></comic-reader>
 </main>
+
+<script type="module">
+  let reader = document.querySelector('comic-reader');
+
+  reader.addEventListener('page', ev => {
+    console.log('New page', ev.detail);
+  });
+</script>

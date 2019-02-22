@@ -18,12 +18,20 @@ export async function mount(demo = defaultDemo) {
   })
 }
 
+export function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function waitFor(eventName) {
   let el = host.firstChild;
 
   return new Promise(resolve => {
     el.addEventListener(eventName, resolve, { once: true });
   });
+}
+
+export function el() {
+  return host.firstChild;
 }
 
 export function shadow() {
