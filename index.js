@@ -110,6 +110,12 @@ template.innerHTML = /* html */ `
       transition: transform .3s ease-out;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      #viewer:not(.updating) {
+        transition-duration: 0.1s !important;
+      }
+    }
+
     .fit-height {
       height: 100%;
       width: 100%;
@@ -211,7 +217,7 @@ function init(shadow) {
   /* State variables */
   let src, source;
   let viewerX = 0,
-  currentIndex = 0, nextIndex = 0, forward = false,
+  currentIndex = 0, nextIndex = 0, navEnabled = true,
   currentPage = 0, nextPage = 0, numberOfItemsLoaded = 0;
 
   /* DOM update functions */
@@ -249,22 +255,6 @@ function init(shadow) {
     viewerNode.classList[isUpdating ? 'add' : 'remove']('updating');
   }
 
-  function rotateReaderPageNode(first) {
-    if(first) {
-      //console.log('Middle', viewerNode.children[2])
-
-      let node = viewerNode.firstElementChild;
-      viewerNode.appendChild(node);
-
-      //console.log('Middle', viewerNode.children[2])
-      return node;
-    } else {
-      let node = viewerNode.lastElementChild;
-      viewerNode.insertBefore(node, viewerNode.firstElementChild);
-      return node;
-    }
-  }
-
   function setReaderPageCurrent(readerPage, isCurrent) {
     readerPage.classList[isCurrent ? 'add' : 'remove']('current');
   }
@@ -296,7 +286,7 @@ function init(shadow) {
 
   function setNextPage(value) {
     if(value !== nextPage) {
-      if(value >= 0) {
+      if(value >= 0 && source.getLength() > value) {
         let oldValue = nextPage;
         nextPage = value;
         // If we're going up
@@ -305,6 +295,9 @@ function init(shadow) {
         } else {
           incrementViewerX(20);
         }
+        return true;
+      } else {
+        return false;
       }
     }
   }
@@ -314,6 +307,15 @@ function init(shadow) {
     if(newValue <= 0) {
       setViewerX(newValue);
     }
+  }
+
+  function enableNav() {
+    navEnabled = true;
+    setViewerUpdating(false);
+  }
+
+  function disableNav() {
+    navEnabled = false;
   }
 
   /* Logic functions */
@@ -385,21 +387,27 @@ function init(shadow) {
   }
 
   function navigateToNext() {
-    setNextPage(nextPage + 1);
-    setNextIndex(nextIndex + 1);
+    if(navEnabled) {
+      if(setNextPage(nextPage + 1)) {
+        setNextIndex(nextIndex + 1);
+      }      
+    }
   }
 
   function navigateToPrevious() {
-    setNextPage(nextPage - 1);
-    setNextIndex(nextIndex - 1);
+    if(navEnabled) {
+      if(setNextPage(nextPage - 1)) {
+        setNextIndex(nextIndex - 1);
+      }
+    }
   }
 
-  function rotatePage2() {
+  function rotatePage() {
     let currentPageNode = readerPageNodes[currentIndex];
     let nextPageNode = readerPageNodes[nextIndex];
 
-    
-    if(currentPage > 1) {
+    if(currentPage > 1 && nextPage > 1 && nextPage < source.getLength() - 2) {
+      disableNav();
       setViewerUpdating(true);
 
       while(true) {
@@ -432,7 +440,7 @@ function init(shadow) {
       }
 
       setViewerX(-40);
-      setTimeout(setViewerUpdating, 0, false);
+      setTimeout(enableNav, 0);
     }
 
     setReaderPageCurrent(currentPageNode, false);
@@ -440,45 +448,6 @@ function init(shadow) {
     
     currentIndex = nextIndex;
     currentPage = nextPage;
-  }
-
-  function rotatePage() {
-    console.log('next index', nextIndex);
-    for(let i = 0; i < readerPageNodes.length; i++) {
-      setReaderPageCurrent(readerPageNodes[i], i === nextIndex);
-    }
-    
-    /*
-    let i = 0;
-    let currentIndex = 0;
-    for(let readerPage of viewerNode.children) {
-      if(readerPage.classList.contains('current')) {
-        currentIndex = i;
-        break;
-      }
-      i++;
-    }
-    */
-
-    // Navigating back
-    if(nextIndex === 1 && currentPage > 1) {
-      setViewerUpdating(true);
-      let readerPage = rotateReaderPageNode(false);
-      incrementViewerX(-20);
-      setTimeout(setViewerUpdating, 0, false);
-      loadInto(nextPage - 2, readerPage);
-    }
-    // Navigating forward
-    else if(nextIndex === 3 && nextPage + 2 < source.getLength()) {
-      setViewerUpdating(true);
-      let readerPage = rotateReaderPageNode(true);
-      incrementViewerX(20);
-      setTimeout(setViewerUpdating, 0, false);
-      loadInto(nextPage + 2, readerPage);
-    }
-    
-    currentPage = nextPage;
-
     dispatchPage();
   }
 
@@ -543,8 +512,7 @@ function init(shadow) {
   }
 
   function onViewerTransition() {
-    console.log('Transition complete...', nextIndex, currentIndex);
-    rotatePage2();
+    rotatePage();
   }
 
   /* Initialization */

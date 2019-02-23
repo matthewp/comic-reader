@@ -4,12 +4,12 @@ describe('Navigation', function() {
   this.timeout(10000);
 
   let undo;
-  before(async () => {
+  beforeEach(async () => {
     undo = await helpers.mount();
   });
 
-  after(() => {
-    //undo();
+  afterEach(() => {
+    undo();
   });
 
   it('Can navigate to the next page', async () => {
@@ -20,25 +20,26 @@ describe('Navigation', function() {
   });
 
   it('Can navigate quickly without losing its spot', async () => {
-    function onPage() {
-      console.log('Got a page')
-    }
-
-    helpers.el().addEventListener('page', onPage);
-
-    let i = 0;
-    while(i < 5) {
-      helpers.wait(50);
-      helpers.navigate('right');
-      i++;
-    }
-
+    await helpers.navigateTo(5);
     let p = helpers.waitFor('page');
     let { detail: pageNumber } = await p;
 
-    assert.equal(pageNumber, 7, 'now on page 7');
+    assert.equal(pageNumber, 6, 'now on page 6');
 
     let page = helpers.currentPage();
-    assert.equal(page.dataset.page, "7", "Page 7");
+    assert.equal(page.dataset.page, "5", "Index 5");
+  });
+
+  it('Navigating back stops on the first page', async () => {
+    await helpers.navigateTo(2);
+    let p = helpers.waitFor('page');
+    let { detail: pageNumber } = await p;
+
+    assert.equal(pageNumber, 3, 'Now on page 3');
+    await helpers.navigateTo(0);
+    await helpers.waitFor('page');
+
+    let page = helpers.currentPage();
+    assert.equal(page, page.parentNode.firstElementChild, 'Is the first item');
   });
 });
