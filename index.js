@@ -288,7 +288,8 @@ function init(shadow) {
 
   function setNextPage(value) {
     if(value !== nextPage) {
-      if(value >= 0 && source.getLength() > value) {
+      let diff = Math.abs(currentPage - value);
+      if(diff <= 2 && value >= 0 && source.getLength() > value) {
         let oldValue = nextPage;
         nextPage = value;
         // If we're going up
