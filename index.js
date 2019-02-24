@@ -276,7 +276,9 @@ function init(shadow) {
 
   function setNextIndex(value) {
     if(value !== nextIndex) {
-      if(value < 5) {
+      if(value < 0) {
+        nextIndex = 4;
+      } else if(value < 5) {
         nextIndex = value;
       } else {
         nextIndex = 0;
