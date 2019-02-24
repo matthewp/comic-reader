@@ -110,6 +110,12 @@ template.innerHTML = /* html */ `
       transition: transform .3s ease-out;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      #viewer:not(.updating) {
+        transition-duration: 0.1s !important;
+      }
+    }
+
     .fit-height {
       height: 100%;
       width: 100%;
@@ -205,12 +211,14 @@ function init(shadow) {
   let fullscreenBtn = frag.querySelector('#fullscreen');
   let expandNode = fullscreenBtn.firstElementChild;
   let contractNode = contractSVG();
-  let readerPageNodes = frag.querySelectorAll('comic-reader-page');
+  let readerPageNodes = Array.from(frag.querySelectorAll('comic-reader-page'));
   let currentReaderPageNode = readerPageNodes[0];
 
   /* State variables */
   let src, source;
-  let viewerX = 0, current = 0, currentPage = 0, numberOfItemsLoaded = 0;
+  let viewerX = 0,
+  currentIndex = 0, nextIndex = 0, navEnabled = true,
+  currentPage = 0, nextPage = 0, numberOfItemsLoaded = 0;
 
   /* DOM update functions */
   function setProgressNode(value) {
@@ -247,18 +255,6 @@ function init(shadow) {
     viewerNode.classList[isUpdating ? 'add' : 'remove']('updating');
   }
 
-  function rotateReaderPageNode(first) {
-    if(first) {
-      let node = viewerNode.firstElementChild;
-      viewerNode.appendChild(node);
-      return node;
-    } else {
-      let node = viewerNode.lastElementChild;
-      viewerNode.insertBefore(node, viewerNode.firstElementChild);
-      return node;
-    }
-  }
-
   function setReaderPageCurrent(readerPage, isCurrent) {
     readerPage.classList[isCurrent ? 'add' : 'remove']('current');
   }
@@ -278,27 +274,33 @@ function init(shadow) {
     }
   }
 
-  function setCurrent(value) {
-    if(value !== current) {
-      if(value < 5) {
-        current = value;
+  function setNextIndex(value) {
+    if(value !== nextIndex) {
+      if(value < 0) {
+        nextIndex = 4;
+      } else if(value < 5) {
+        nextIndex = value;
       } else {
-        current = 0;
+        nextIndex = 0;
       }
     }
   }
 
-  function setCurrentPage(value) {
-    if(value !== currentPage) {
-      if(value >= 0) {
-        let oldValue = currentPage;
-        currentPage = value;
+  function setNextPage(value) {
+    if(value !== nextPage) {
+      let diff = Math.abs(currentPage - value);
+      if(diff <= 2 && value >= 0 && source.getLength() > value) {
+        let oldValue = nextPage;
+        nextPage = value;
         // If we're going up
         if(oldValue < value) {
           incrementViewerX(-20);
         } else {
           incrementViewerX(20);
         }
+        return true;
+      } else {
+        return false;
       }
     }
   }
@@ -308,6 +310,15 @@ function init(shadow) {
     if(newValue <= 0) {
       setViewerX(newValue);
     }
+  }
+
+  function enableNav() {
+    navEnabled = true;
+    setViewerUpdating(false);
+  }
+
+  function disableNav() {
+    navEnabled = false;
   }
 
   /* Logic functions */
@@ -379,47 +390,67 @@ function init(shadow) {
   }
 
   function navigateToNext() {
-    setCurrentPage(currentPage + 1);
-    setCurrent(current + 1);
+    if(navEnabled) {
+      if(setNextPage(nextPage + 1)) {
+        setNextIndex(nextIndex + 1);
+      }      
+    }
   }
 
   function navigateToPrevious() {
-    setCurrentPage(currentPage - 1);
-    setCurrent(current - 1);
+    if(navEnabled) {
+      if(setNextPage(nextPage - 1)) {
+        setNextIndex(nextIndex - 1);
+      }
+    }
   }
 
   function rotatePage() {
-    for(let i = 0; i < readerPageNodes.length; i++) {
-      setReaderPageCurrent(readerPageNodes[i], i === current);
-    }
-    
-    let i = 0;
-    let currentIndex = 0;
-    for(let readerPage of viewerNode.children) {
-      if(readerPage.classList.contains('current')) {
-        currentIndex = i;
-        break;
+    let currentPageNode = readerPageNodes[currentIndex];
+    let nextPageNode = readerPageNodes[nextIndex];
+
+    if(currentPage > 1 && nextPage > 1 && nextPage < source.getLength() - 2) {
+      disableNav();
+      setViewerUpdating(true);
+
+      while(true) {
+        let middlePageNode = viewerNode.children.item(2);
+  
+        if(nextPageNode === middlePageNode) {
+          break;
+        }
+
+        if(middlePageNode.nextElementSibling === nextPageNode) {
+          let node = viewerNode.firstElementChild;
+          viewerNode.appendChild(node);
+          loadInto(nextPage + 2, node);
+        }
+        else if(viewerNode.lastElementChild === nextPageNode) {
+          let node = viewerNode.firstElementChild;
+          viewerNode.appendChild(node);
+          loadInto(nextPage + 1, node);
+        }
+        else if(middlePageNode.previousElementSibling === nextPageNode) {
+          let node = viewerNode.lastElementChild;
+          viewerNode.insertBefore(node, viewerNode.firstElementChild);
+          loadInto(nextPage - 2, node);
+        }
+        else if(viewerNode.firstElementChild === nextPageNode) {
+          let node = viewerNode.lastElementChild;
+          viewerNode.insertBefore(node, viewerNode.firstElementChild);
+          loadInto(nextPage - 1, node);
+        }
       }
-      i++;
+
+      setViewerX(-40);
+      setTimeout(enableNav, 0);
     }
 
-    // Move last reader-page to before
-    if(currentIndex === 1 && currentPage > 1) {
-      setViewerUpdating(true);
-      let readerPage = rotateReaderPageNode(false);
-      incrementViewerX(-20);
-      setTimeout(setViewerUpdating, 0, false);
-      loadInto(currentPage - 2, readerPage);
-    }
-    // Move first reader-page to last
-    else if(currentIndex === 3 && currentPage + 2 < source.getLength()) {
-      setViewerUpdating(true);
-      let readerPage = rotateReaderPageNode(true);
-      incrementViewerX(20);
-      setTimeout(setViewerUpdating, 0, false);
-      loadInto(currentPage + 2, readerPage);
-    }
-
+    setReaderPageCurrent(currentPageNode, false);
+    setReaderPageCurrent(nextPageNode, true);
+    
+    currentIndex = nextIndex;
+    currentPage = nextPage;
     dispatchPage();
   }
 
