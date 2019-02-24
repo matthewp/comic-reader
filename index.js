@@ -216,8 +216,7 @@ function init(shadow) {
 
   /* State variables */
   let src, source;
-  let viewerX = 0,
-  currentIndex = 0, nextIndex = 0, navEnabled = true,
+  let viewerX = 0, navEnabled = true,
   currentPage = 0, nextPage = 0, numberOfItemsLoaded = 0;
 
   /* DOM update functions */
@@ -267,22 +266,22 @@ function init(shadow) {
     }
   }
 
+  function setPage(value) {
+    if(currentPage !== value) {
+      currentPage = value;
+
+      // If a src is already set
+      if(src) {
+        nextPage = value;
+        rotatePage();
+      }
+    }
+  }
+
   function setViewerX(value) {
     if(viewerX !== value) {
       viewerX = value;
       translateViewerNode();
-    }
-  }
-
-  function setNextIndex(value) {
-    if(value !== nextIndex) {
-      if(value < 0) {
-        nextIndex = 4;
-      } else if(value < 5) {
-        nextIndex = value;
-      } else {
-        nextIndex = 0;
-      }
     }
   }
 
@@ -364,7 +363,7 @@ function init(shadow) {
       source = new ZipSource(blob);
     }
     
-    await loadPage(0);
+    await loadPage(currentPage);
     preloadIdle();
 
     for(let i = 1; i < 5; i++) {
@@ -391,67 +390,90 @@ function init(shadow) {
 
   function navigateToNext() {
     if(navEnabled) {
-      if(setNextPage(nextPage + 1)) {
-        setNextIndex(nextIndex + 1);
-      }      
+      setNextPage(nextPage + 1); 
     }
   }
 
   function navigateToPrevious() {
     if(navEnabled) {
-      if(setNextPage(nextPage - 1)) {
-        setNextIndex(nextIndex - 1);
-      }
+      setNextPage(nextPage - 1);
     }
   }
 
   function rotatePage() {
-    let currentPageNode = readerPageNodes[currentIndex];
-    let nextPageNode = readerPageNodes[nextIndex];
+    disableNav();
+    setViewerUpdating(true);
 
-    if(currentPage > 1 && nextPage > 1 && nextPage < source.getLength() - 2) {
-      disableNav();
-      setViewerUpdating(true);
+    let expectedPages, inMiddle = false;
+    setReaderPageCurrent(currentReaderPageNode, false);
 
-      while(true) {
-        let middlePageNode = viewerNode.children.item(2);
-  
-        if(nextPageNode === middlePageNode) {
-          break;
-        }
+    if(nextPage < 2) {
+      expectedPages = new Set([0, 1, 2, 3, 4]);
+    } else if(nextPage + 2 >= source.getLength()) {
+      let len = source.getLength();
+      expectedPages = new Set();
+      for(let i = len - 5; i < len; i++) {
+        expectedPages.add(i);
+      }
+    } else {
+      expectedPages = new Set([nextPage - 2, nextPage - 1, nextPage, nextPage + 1, nextPage + 2]);
+    }
 
-        if(middlePageNode.nextElementSibling === nextPageNode) {
-          let node = viewerNode.firstElementChild;
-          viewerNode.appendChild(node);
-          loadInto(nextPage + 2, node);
-        }
-        else if(viewerNode.lastElementChild === nextPageNode) {
-          let node = viewerNode.firstElementChild;
-          viewerNode.appendChild(node);
-          loadInto(nextPage + 1, node);
-        }
-        else if(middlePageNode.previousElementSibling === nextPageNode) {
-          let node = viewerNode.lastElementChild;
-          viewerNode.insertBefore(node, viewerNode.firstElementChild);
-          loadInto(nextPage - 2, node);
-        }
-        else if(viewerNode.firstElementChild === nextPageNode) {
-          let node = viewerNode.lastElementChild;
-          viewerNode.insertBefore(node, viewerNode.firstElementChild);
-          loadInto(nextPage - 1, node);
+    let currentMap = new Map();
+    for(let i = 0; i < 5; i++) {
+      let readerPage = viewerNode.children.item(i);
+      let pageNumber = Number(readerPage.dataset.page);
+      currentMap.set(pageNumber, readerPage);
+    }
+
+    // Now diff
+    let i = 0;
+    for(let expectedNumber of expectedPages) {
+      let slotReaderPage = viewerNode.children.item(i);
+      let readerPage = currentMap.get(expectedNumber);
+
+      // In the right slot, continue
+      if(slotReaderPage === readerPage) {
+
+      }
+      // We have the page, it's just in the wrong slot
+      else if(readerPage) {
+        viewerNode.insertBefore(readerPage, slotReaderPage);
+      }
+      // Use this page, if it's no longer used
+      else if(!expectedPages.has(Number(slotReaderPage.dataset.page))) {
+        readerPage = slotReaderPage;
+        loadInto(expectedNumber, slotReaderPage);
+      }
+      // Find a page we can use
+      else {
+        let node = viewerNode.lastElementChild;
+        while(node) {
+          if(!expectedPages.has(Number(node.dataset.page))) {
+            readerPage = node;
+            viewerNode.insertBefore(node, slotReaderPage);
+            loadInto(expectedNumber, node);
+            break;
+          }
+          node = node.previousElementSibling;
         }
       }
 
-      setViewerX(-40);
-      setTimeout(enableNav, 0);
+      if(expectedNumber === nextPage) {
+        setReaderPageCurrent(readerPage, true);
+        currentReaderPageNode = readerPage;
+        inMiddle = i === 2;
+      }
+
+      i++;
     }
 
-    setReaderPageCurrent(currentPageNode, false);
-    setReaderPageCurrent(nextPageNode, true);
+    if(inMiddle) {
+      setViewerX(-40);
+    }
     
-    currentIndex = nextIndex;
+    setTimeout(enableNav, 0);
     currentPage = nextPage;
-    dispatchPage();
   }
 
   /* Event dispatchers */
@@ -516,6 +538,7 @@ function init(shadow) {
 
   function onViewerTransition() {
     rotatePage();
+    dispatchPage();
   }
 
   /* Initialization */
@@ -549,6 +572,7 @@ function init(shadow) {
 
   function update(data = {}) {
     if(data.src) setSrc(data.src);
+    if(data.page) setPage(data.page - 1);
     return frag;
   }
 
@@ -562,19 +586,20 @@ const VIEW = Symbol('comic-reader.view');
 
 class ComicReader extends HTMLElement {
   static get observedAttributes() {
-    return ['src'];
+    return ['page', 'src'];
   }
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
     this._src = null;
+    this._page = null;
   }
 
   connectedCallback() {
     if(!this[VIEW]) {
       let update = this[VIEW] = init.call(this, this.shadowRoot);
-      let frag = update({ src: this._src });
+      let frag = update({ src: this._src, page: this._page });
       this.shadowRoot.appendChild(frag);
     }
     this[VIEW].connect();
@@ -596,6 +621,16 @@ class ComicReader extends HTMLElement {
     this._src = src;
     if(this[VIEW])
       this[VIEW]({ src });
+  }
+
+  get page() {
+    return this._page;
+  }
+
+  set page(page) {
+    this._page = page;
+    if(this[VIEW])
+      this[VIEW]({ page });
   }
 }
 
