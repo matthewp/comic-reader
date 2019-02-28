@@ -512,7 +512,6 @@ function init(shadow) {
   }
 
   function onKeyUp(ev) {
-    console.log("WHA", ev.keyCode);
     switch(ev.keyCode) {
       // Left
       case 37:
