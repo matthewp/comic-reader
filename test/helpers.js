@@ -63,8 +63,8 @@ export function currentPage() {
 
 export function navigate(dir) {
   let page = currentPage();
-  let canvas = page.shadowRoot.querySelector('canvas');
-  let rect = canvas.getBoundingClientRect();
+  let el = page.shadowRoot.querySelector('comic-reader-zoom');
+  let rect = el.getBoundingClientRect();
   let x;
   if(dir === 'right') {
     x = rect.right - 10;
@@ -76,7 +76,7 @@ export function navigate(dir) {
     screenX: x,
     screenY: 12
   });
-  canvas.dispatchEvent(ev);
+  el.dispatchEvent(ev);
 }
 
 export async function navigateTo(index) {

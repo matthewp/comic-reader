@@ -238,6 +238,10 @@ function init(shadow) {
     fullscreenBtn.appendChild(newChild);
   }
 
+  function blurFullscreen() {
+    fullscreenBtn.blur();
+  }
+
   function toggleControlsOpen() {
     controlsNode.classList.toggle('open');
   }
@@ -385,6 +389,7 @@ function init(shadow) {
   }
 
   function scheduleControlsOff() {
+    blurFullscreen();
     setTimeout(setControlsOpen, 2000, false);
   }
 
