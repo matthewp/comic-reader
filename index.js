@@ -13,18 +13,31 @@ template.innerHTML = /* html */ `
       width: 100%;
       position: relative;
       background-color: var(--white);
+      overflow: hidden;
+    }
+
+    .pane {
+      position: absolute;
+      left: 0;
+      right: 0;
+      user-select: none;
+    }
+
+    .pane button.icon,
+    .pane .button.icon {
+      display: inline-block;
+      height: 40px;
+      width: 40px;
+      margin: 0.3em 1em;
     }
 
     .top-pane {
-      background: linear-gradient(to bottom,#000 0%,rgba(229,229,229,0) 100%);
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 0.75em;
       display: grid;
-      user-select: none;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: min-content 1fr min-content;
+      grid-template-rows: 1fr 1fr;
+      background: linear-gradient(to bottom,#000 0%,rgba(229,229,229,0) 100%);
+      top: 0;
+      padding: 0.75em;
       transition: opacity 1s;
       opacity: 0;
       z-index: 1;
@@ -35,17 +48,63 @@ template.innerHTML = /* html */ `
       opacity: 1;
     }
 
-    .top-pane-right {
-      justify-self: end;
+    .top-pane > *:first-child,
+    .top-pane > *:last-child {
+      grid-row: 1 / 3;
+      align-self: center;
     }
 
-    .top-pane button.icon {
-      height: 50px;
-      width: 50px;
-      margin: 0 1em;
+    :host(:not([back-href])) .top-pane > a {
+      display: none;
     }
 
-    button.icon {
+    :host(:not([back-href])) .top-pane {
+      grid-template-columns: 1fr min-content;
+    }
+
+    :host(:not([back-href])) .top-pane .book-info {
+      grid-column: 1;
+    }
+
+    .top-pane .book-info {
+      color: var(--white);
+      margin: 0;
+      align-self: center;
+    }
+
+    .top-pane h1 {
+      font-size: 22px;
+    }
+
+    .top-pane h2 {
+      grid-row: 2;
+      grid-column: 2;
+      font-size: 16px;
+    }
+
+    #page-progress {
+      opacity: 0;
+      transition: opacity .5s;
+    }
+
+    #root.loaded #page-progress {
+      opacity: 1;
+    }
+
+    .bottom-pane {
+      background-color: #36454F;
+      bottom: 0;
+      transform: translateY(50px);
+      transition: transform .5s;
+    }
+
+    .bottom-pane.open,
+    .bottom-pane:focus-within {
+      transform: translateY(0px);
+    }
+
+    button.icon,
+    .button.icon {
       background-color: transparent;
       border: none;
       padding: 0;
@@ -55,7 +114,8 @@ template.innerHTML = /* html */ `
       transform: rotate(90deg);
     }
 
-    button.icon svg {
+    button.icon svg,
+    .button.icon svg {
       fill: var(--white);
     }
 
@@ -144,26 +204,20 @@ template.innerHTML = /* html */ `
     }
   </style>
   <div id="root" tabindex="0">
-    <div class="top-pane controls">
-      <div class="top-pane-left">
-        <button id="fit-width" class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <title>Fit width</title>
-            <path d="M190.4 354.1L91.9 256l98.4-98.1-30-29.9L32 256l128.4 128 30-29.9zm131.2 0L420 256l-98.4-98.1 30-29.9L480 256 351.6 384l-30-29.9z"/></svg>
-        </button>
-        <button id="fit-height" class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <title>Fit height</title>
-            <path d="M190.4 354.1L91.9 256l98.4-98.1-30-29.9L32 256l128.4 128 30-29.9zm131.2 0L420 256l-98.4-98.1 30-29.9L480 256 351.6 384l-30-29.9z"/></svg>
-        </button>
-      </div>
-      <div class="top-pane-right">
-        <button id="fullscreen" class="icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <title>Enter fullscreen</title>
-            <path d="M396.795 396.8H320V448h128V320h-51.205zM396.8 115.205V192H448V64H320v51.205zM115.205 115.2H192V64H64v128h51.205zM115.2 396.795V320H64v128h128v-51.205z"/></svg>
-        </button>
-      </div>
+    <div class="top-pane pane controls">
+      <a id="back-href" class="button icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <title>Back</title>
+          <path d="M427 234.625H167.296l119.702-119.702L256 85 85 256l171 171 29.922-29.924-118.626-119.701H427v-42.75z"/>
+        </svg>
+      </a>
+      <h1 id="book-title" class="book-info"></h1>
+      <h2 id="page-progress" class="book-info"><span id="current-page"></span><span> of </span><span id="total-pages"></span></h2>
+      <button id="fullscreen" class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <title>Enter fullscreen</title>
+          <path d="M396.795 396.8H320V448h128V320h-51.205zM396.8 115.205V192H448V64H320v51.205zM115.205 115.2H192V64H64v128h51.205zM115.2 396.795V320H64v128h128v-51.205z"/></svg>
+      </button>
     </div>
     <div class="progress-container">
       <progress value="0" max="100"></progress>
@@ -176,6 +230,20 @@ template.innerHTML = /* html */ `
         <comic-reader-page></comic-reader-page>
         <comic-reader-page></comic-reader-page>
       </div>
+    </div>
+
+    <div class="bottom-pane pane controls">
+      <button id="fit-width" class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <title>Fit width</title>
+          <path d="M190.4 354.1L91.9 256l98.4-98.1-30-29.9L32 256l128.4 128 30-29.9zm131.2 0L420 256l-98.4-98.1 30-29.9L480 256 351.6 384l-30-29.9z"/></svg>
+      </button>
+      <button id="fit-height" class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <title>Fit height</title>
+          <path d="M190.4 354.1L91.9 256l98.4-98.1-30-29.9L32 256l128.4 128 30-29.9zm131.2 0L420 256l-98.4-98.1 30-29.9L480 256 351.6 384l-30-29.9z"/></svg>
+      </button>
+      <div></div>
     </div>
   </div>
 `;
@@ -203,11 +271,15 @@ function init(shadow) {
   let frag = clone();
   let rootNode = frag.querySelector('#root');
   let viewerNode = frag.querySelector('#viewer');
-  let controlsNode = frag.querySelector('.controls');
+  let controlsNodes = frag.querySelectorAll('.controls');
   let progressNode = frag.querySelector('progress');
   let progressContainerNode = frag.querySelector('.progress-container');
   let fitHeightBtn = frag.querySelector('#fit-height');
   let fitWidthBtn = frag.querySelector('#fit-width');
+  let backHrefNode = frag.querySelector('#back-href');
+  let titleNode = frag.querySelector('#book-title');
+  let currentPageNode = frag.querySelector('#current-page');
+  let totalPagesNode = frag.querySelector('#total-pages');
   let fullscreenBtn = frag.querySelector('#fullscreen');
   let expandNode = fullscreenBtn.firstElementChild;
   let contractNode = contractSVG();
@@ -215,7 +287,7 @@ function init(shadow) {
   let currentReaderPageNode = readerPageNodes[0];
 
   /* State variables */
-  let src, source;
+  let src, source, title, totalPages, backHref;
   let viewerX = 0, navEnabled = true,
   currentPage = 0, nextPage = 0, numberOfItemsLoaded = 0;
 
@@ -243,11 +315,15 @@ function init(shadow) {
   }
 
   function toggleControlsOpen() {
-    controlsNode.classList.toggle('open');
+    for(let controlsNode of controlsNodes) {
+      controlsNode.classList.toggle('open');
+    }
   }
 
   function setControlsOpen(open) {
-    controlsNode.classList[open ? 'add' : 'remove']('open');
+    for(let controlsNode of controlsNodes) {
+      controlsNode.classList[open ? 'add' : 'remove']('open');
+    }
   }
 
   function translateViewerNode() {
@@ -262,6 +338,26 @@ function init(shadow) {
     readerPage.classList[isCurrent ? 'add' : 'remove']('current');
   }
 
+  function setTitleNode() {
+    titleNode.textContent = title;
+  }
+
+  function setTotalPagesNode() {
+    totalPagesNode.textContent = totalPages;
+  }
+
+  function setCurrentPageNode() {
+    currentPageNode.textContent = currentPage + 1;
+  }
+
+  function setBookLoaded() {
+    rootNode.classList.add('loaded');
+  }
+
+  function setBackHrefNode() {
+    backHrefNode.href = backHref;
+  }
+
   /* State update functions */
   function setSrc(value) {
     if(src !== value) {
@@ -270,9 +366,14 @@ function init(shadow) {
     }
   }
 
+  function setCurrentPage(value) {
+    currentPage = value;
+    setCurrentPageNode();
+  }
+
   function setPage(value) {
     if(currentPage !== value) {
-      currentPage = value;
+      setCurrentPage(value);
 
       // If a src is already set
       if(src) {
@@ -324,6 +425,27 @@ function init(shadow) {
     navEnabled = false;
   }
 
+  function setTitle(value) {
+    if(title !== value) {
+      title = value;
+      setTitleNode();
+    }
+  }
+
+  function setTotalPages(value) {
+    if(totalPages !== value) {
+      totalPages = value;
+      setTotalPagesNode();
+    }
+  }
+
+  function setBackHref(value) {
+    if(backHref !== value) {
+      backHref = value;
+      setBackHrefNode();
+    }
+  }
+
   /* Logic functions */
   async function preloadIdle() {
     requestIdleCallback(preload);
@@ -334,6 +456,9 @@ function init(shadow) {
       await source.item(numberOfItemsLoaded);
       numberOfItemsLoaded++;
       requestIdleCallback(preload);
+    } else {
+      setTotalPages(source.getLength());
+      setBookLoaded();
     }
   }
 
@@ -369,6 +494,7 @@ function init(shadow) {
     
     await loadPage(currentPage);
     preloadIdle();
+    setCurrentPageNode();
 
     for(let i = 1; i < 5; i++) {
       if(source.getLength() > i) {
@@ -478,7 +604,7 @@ function init(shadow) {
     }
     
     setTimeout(enableNav, 0);
-    currentPage = nextPage;
+    setCurrentPage(nextPage);
   }
 
   /* Event dispatchers */
@@ -578,6 +704,8 @@ function init(shadow) {
   function update(data = {}) {
     if(data.src) setSrc(data.src);
     if(data.page) setPage(data.page - 1);
+    if(data.title) setTitle(data.title);
+    if(data.backHref) setBackHref(data.backHref);
     return frag;
   }
 
@@ -591,20 +719,18 @@ const VIEW = Symbol('comic-reader.view');
 
 class ComicReader extends HTMLElement {
   static get observedAttributes() {
-    return ['page', 'src'];
+    return ['page', 'src', 'title', 'back-href'];
   }
 
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this._src = null;
-    this._page = null;
   }
 
   connectedCallback() {
     if(!this[VIEW]) {
       let update = this[VIEW] = init.call(this, this.shadowRoot);
-      let frag = update({ src: this._src, page: this._page });
+      let frag = update({ src: this._src, page: this._page, title: this._title, backHref: this._backHref });
       this.shadowRoot.appendChild(frag);
     }
     this[VIEW].connect();
@@ -615,7 +741,8 @@ class ComicReader extends HTMLElement {
   }
 
   attributeChangedCallback(name, _, newVal) {
-    this[name] = newVal;
+    let prop = name === 'back-href' ? 'backHref' : name;
+    this[prop] = newVal;
   }
 
   get src() {
@@ -636,6 +763,18 @@ class ComicReader extends HTMLElement {
     this._page = page;
     if(this[VIEW])
       this[VIEW]({ page });
+  }
+
+  set title(title) {
+    this._title = title;
+    if(this[VIEW])
+      this[VIEW]({ title });
+  }
+
+  set backHref(backHref) {
+    this._backHref = backHref;
+    if(this[VIEW])
+      this[VIEW]({ backHref });
   }
 }
 
