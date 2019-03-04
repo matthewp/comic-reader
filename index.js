@@ -66,6 +66,10 @@ template.innerHTML = /* html */ `
       grid-column: 1;
     }
 
+    :host(:not([title])) .top-pane #page-progress {
+      grid-row: 1 / 3;
+    }
+
     .top-pane .book-info {
       color: var(--white);
       margin: 0;
