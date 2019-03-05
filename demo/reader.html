@@ -15,15 +15,32 @@
     width: 600px;
   }
 
-  #TITLE {
-    text-align: center;
+  comic-reader:not(:defined) a {
+    display: none;
+  }
+
+  comic-reader a {
+    display: inline-block;
+    height: 40px;
+    width: 40px;
+    margin: 0.3em 1em;
+  }
+
+  comic-reader a svg {
+    fill: white;
   }
 </style>
 
 <main>
   <h1 id="TITLE">Reader Demo</h1>
-  <comic-reader src="./demo.cbz"></comic-reader>
-  <div id="DEMO"></div>
+  <comic-reader title="Baffling Mysteries #9" src="./demo.cbz">
+    <a href="./" slot="top-left-nav">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+        <title>Back</title>
+        <path d="M427 234.625H167.296l119.702-119.702L256 85 85 256l171 171 29.922-29.924-118.626-119.701H427v-42.75z"/>
+      </svg>
+    </a>
+  </comic-reader>
 </main>
 
 <script type="module">

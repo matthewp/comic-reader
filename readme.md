@@ -63,6 +63,23 @@ let reader = document.querySelector('comic-reader');
 reader.page = 18;
 ```
 
+#### title
+
+Show a title in the top pane navigation. This is useful to, for example, show the comic title and issue number in a context where this might not be obvious to the reader otherwise.
+
+The title will be displayed above the page progress.
+
+```html
+<comic-reader title="Baffling Mysteries #9"></comic-reader>
+```
+
+Or with JavaScript:
+
+```js
+let reader = document.querySelector('comic-reader');
+reader.title = 'Baffling Mysteries #9';
+```
+
 ### Events
 
 These events are emitted:
@@ -80,6 +97,31 @@ reader.addEventListener('page', ev => {
   // Do something with the page...
 });
 ```
+
+### Slots
+
+The following optional slots are provided to customize the look of `<comic-reader>`.
+
+#### top-left-nav
+
+The top pane navigation is activated when the user clicks within the middle third area of the viewport. It contains a button to turn on fullscreen mode and also displays the current page.
+
+You can add content to the top left portion of the nav; immediately to the left of the page progress and title section. The follow example displays a back button using this slot:
+
+```html
+<comic-reader title="Baffling Mysteries #9" src="./demo.cbz">
+  <a href="./" slot="top-left-nav">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <title>Back</title>
+      <path d="M427 234.625H167.296l119.702-119.702L256 85 85 256l171 171 29.922-29.924-118.626-119.701H427v-42.75z"/>
+    </svg>
+  </a>
+</comic-reader>
+```
+
+Which will look like so:
+
+![Example of usage of the top-left-nav slot displaying a back button](https://user-images.githubusercontent.com/361671/53805364-ecbb3400-3f17-11e9-8ec8-0a34deaa12b6.png)
 
 ## License 
 
