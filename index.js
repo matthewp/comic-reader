@@ -33,7 +33,7 @@ template.innerHTML = /* html */ `
 
     .top-pane {
       display: grid;
-      grid-template-columns: min-content 1fr min-content;
+      grid-template-columns: 1fr min-content;
       grid-template-rows: 1fr 1fr;
       background: linear-gradient(to bottom,#000 0%,rgba(229,229,229,0) 100%);
       top: 0;
@@ -54,26 +54,30 @@ template.innerHTML = /* html */ `
       align-self: center;
     }
 
-    :host(:not([back-href])) .top-pane > a {
-      display: none;
-    }
-
-    :host(:not([back-href])) .top-pane {
-      grid-template-columns: 1fr min-content;
-    }
-
-    :host(:not([back-href])) .top-pane .book-info {
-      grid-column: 1;
-    }
-
-    :host(:not([title])) .top-pane #page-progress {
-      grid-row: 1 / 3;
-    }
-
     .top-pane .book-info {
       color: var(--white);
       margin: 0;
       align-self: center;
+
+      grid-column: 1;
+      margin-left: 1rem;
+    }
+
+    .top-pane.show-left {
+      grid-template-columns: min-content 1fr min-content;
+    }
+
+    .top-pane.show-left .book-info {
+      grid-column: 2;
+      margin-left: 0;
+    }
+
+    slot[name=top-left-nav] {
+      display: inline-block;
+    }
+
+    :host(:not([title])) .top-pane #page-progress {
+      grid-row: 1 / 3;
     }
 
     .top-pane h1 {
@@ -209,12 +213,7 @@ template.innerHTML = /* html */ `
   </style>
   <div id="root" tabindex="0">
     <div class="top-pane pane controls">
-      <a id="back-href" class="button icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-          <title>Back</title>
-          <path d="M427 234.625H167.296l119.702-119.702L256 85 85 256l171 171 29.922-29.924-118.626-119.701H427v-42.75z"/>
-        </svg>
-      </a>
+      <slot name="top-left-nav"></slot>
       <h1 id="book-title" class="book-info"></h1>
       <h2 id="page-progress" class="book-info"><span id="current-page"></span><span> of </span><span id="total-pages"></span></h2>
       <button id="fullscreen" class="icon">
@@ -280,10 +279,11 @@ function init(shadow) {
   let progressContainerNode = frag.querySelector('.progress-container');
   let fitHeightBtn = frag.querySelector('#fit-height');
   let fitWidthBtn = frag.querySelector('#fit-width');
-  let backHrefNode = frag.querySelector('#back-href');
   let titleNode = frag.querySelector('#book-title');
   let currentPageNode = frag.querySelector('#current-page');
   let totalPagesNode = frag.querySelector('#total-pages');
+  let topLeftNavSlot = frag.querySelector('slot[name=top-left-nav]');
+  let topPaneNode = frag.querySelector('.top-pane');
   let fullscreenBtn = frag.querySelector('#fullscreen');
   let expandNode = fullscreenBtn.firstElementChild;
   let contractNode = contractSVG();
@@ -291,7 +291,7 @@ function init(shadow) {
   let currentReaderPageNode = readerPageNodes[0];
 
   /* State variables */
-  let src, source, title, totalPages, backHref;
+  let src, source, title, totalPages;
   let viewerX = 0, navEnabled = true,
   currentPage = 0, nextPage = 0, numberOfItemsLoaded = 0;
 
@@ -358,8 +358,9 @@ function init(shadow) {
     rootNode.classList.add('loaded');
   }
 
-  function setBackHrefNode() {
-    backHrefNode.href = backHref;
+  function setTopLeftNav() {
+    let nodes = topLeftNavSlot.assignedNodes();
+    topPaneNode.classList[nodes.length ? 'add' : 'remove']('show-left');
   }
 
   /* State update functions */
@@ -440,13 +441,6 @@ function init(shadow) {
     if(totalPages !== value) {
       totalPages = value;
       setTotalPagesNode();
-    }
-  }
-
-  function setBackHref(value) {
-    if(backHref !== value) {
-      backHref = value;
-      setBackHrefNode();
     }
   }
 
@@ -676,6 +670,10 @@ function init(shadow) {
     dispatchPage();
   }
 
+  function onTopLeftSlotChange() {
+    setTopLeftNav();
+  }
+
   /* Initialization */
   function connect() {
     for(let readerPage of readerPageNodes) {
@@ -689,6 +687,7 @@ function init(shadow) {
     fullscreenBtn.addEventListener('click', onFullscreenClick);
     rootNode.addEventListener('keyup', onKeyUp);
     viewerNode.addEventListener('transitionend', onViewerTransition);
+    topLeftNavSlot.addEventListener('slotchange', onTopLeftSlotChange);
   }
 
   function disconnect() {
@@ -702,14 +701,15 @@ function init(shadow) {
     fitWidthBtn.removeEventListener('click', onFitWidthClick);
     fullscreenBtn.removeEventListener('click', onFullscreenClick);
     rootNode.removeEventListener('keyup', onKeyUp);
+    topLeftNavSlot.removeEventListener('slotchange', onTopLeftSlotChange);
     closeBook();
   }
+  setTopLeftNav();
 
   function update(data = {}) {
     if(data.src) setSrc(data.src);
     if(data.page) setPage(data.page - 1);
     if(data.title) setTitle(data.title);
-    if(data.backHref) setBackHref(data.backHref);
     return frag;
   }
 
@@ -723,7 +723,7 @@ const VIEW = Symbol('comic-reader.view');
 
 class ComicReader extends HTMLElement {
   static get observedAttributes() {
-    return ['page', 'src', 'title', 'back-href'];
+    return ['page', 'src', 'title'];
   }
 
   constructor() {
@@ -745,8 +745,7 @@ class ComicReader extends HTMLElement {
   }
 
   attributeChangedCallback(name, _, newVal) {
-    let prop = name === 'back-href' ? 'backHref' : name;
-    this[prop] = newVal;
+    this[name] = newVal;
   }
 
   get src() {
@@ -773,12 +772,6 @@ class ComicReader extends HTMLElement {
     this._title = title;
     if(this[VIEW])
       this[VIEW]({ title });
-  }
-
-  set backHref(backHref) {
-    this._backHref = backHref;
-    if(this[VIEW])
-      this[VIEW]({ backHref });
   }
 }
 
