@@ -1,4 +1,4 @@
-import './lib/page.js';
+import './page.js';
 
 const template = document.createElement('template');
 template.innerHTML = /* html */ `
@@ -482,7 +482,7 @@ function init(shadow) {
         blob = await res.blob();
       }
 
-      const { default: ZipSource } = await import('./lib/zipsource.js');
+      const { default: ZipSource } = await import('./zipsource.js');
       source = new ZipSource(blob);
     }
     

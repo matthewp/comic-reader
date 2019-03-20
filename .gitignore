@@ -1,2 +1,5 @@
 .DS_Store
 node_modules/
+mod.js
+chunk-*.js
+libarchive.js
