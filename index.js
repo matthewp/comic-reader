@@ -493,7 +493,7 @@ function init(shadow) {
     rotatePage();
 
     // Dispatch the load event
-    dispatchLoad();
+    setTimeout(dispatchLoad, 0);
   }
 
   function closeBook() {
