@@ -468,11 +468,8 @@ function init(shadow) {
 
   async function loadPage(i) {
     setProgressContainerNode(true);
-    let url = await source.item(i, setProgressNode);
+    await source.item(i, setProgressNode);
     setProgressContainerNode(false);
-
-    currentReaderPageNode.dataset.page = i;
-    currentReaderPageNode.url = url;
   }
 
   async function loadSrc() {
@@ -493,17 +490,10 @@ function init(shadow) {
     await loadPage(currentPage);
     preloadIdle();
     setCurrentPageNode();
+    rotatePage();
 
-    for(let i = 1; i < 5; i++) {
-      if(source.getLength() > i) {
-        let nextUrl = await source.item(i);
-        let readerPage = readerPageNodes[i];
-        readerPage.dataset.page = i;
-        readerPage.url = nextUrl;
-      }
-    }
-
-    dispatchLoad();
+    // Dispatch the load event
+    setTimeout(dispatchLoad, 0);
   }
 
   function closeBook() {
@@ -530,6 +520,10 @@ function init(shadow) {
   }
 
   function rotatePage() {
+    if(!source) {
+      return;
+    }
+
     disableNav();
     setViewerUpdating(true);
 
