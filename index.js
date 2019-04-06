@@ -12,7 +12,6 @@ template.innerHTML = /* html */ `
       height: 100%;
       width: 100%;
       position: relative;
-      background-color: var(--white);
       overflow: hidden;
     }
 
