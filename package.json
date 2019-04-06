@@ -2,18 +2,21 @@
   "name": "comic-reader",
   "version": "0.2.2",
   "description": "A comic reader web component",
-  "main": "index.js",
+  "main": "mod.js",
+  "module": "mod.js",
   "scripts": {
     "test": "testee --browsers chrome test/test.html --config=testee.json"
   },
   "files": [
-    "index.js",
-    "lib"
+    "mod.js",
+    "chunk-bf71d8d9.js",
+    "libarchive.js"
   ],
-  "keywords": [],
+  "keywords": ["comics", "web component"],
   "author": "Matthew Phillips <matthew@matthewphillips.info>",
   "license": "BSD-2-Clause",
   "devDependencies": {
+    "@matthewp/compile": "^2.0.0",
     "libarchive.js": "^1.0.1",
     "testee": "^0.9.0"
   }

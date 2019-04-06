@@ -1,4 +1,4 @@
-import '../index.js';
+import '../src/index.js';
 
 function pad(n) {
   n = n + '';
@@ -19,7 +19,7 @@ const demoSource = {
   item(i) {
     return demoComic[i];
   }
-}
+};
 
 export async function mount() {
   let el = document.createElement('comic-reader');
