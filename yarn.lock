@@ -3,8 +3,8 @@
 
 
 "@matthewp/compile@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@matthewp/compile/-/compile-2.0.0.tgz#2944b39c3f9b431c26cd131961304a0d751675d4"
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@matthewp/compile/-/compile-2.1.0.tgz#6725c2755d4b1fff7d35fd36eb7d55a8cbbfbfe9"
   dependencies:
     follow-redirects "^1.5.1"
     meow "^5.0.0"
@@ -492,8 +492,8 @@ buffers@~0.1.1:
   resolved "https://registry.yarnpkg.com/buffers/-/buffers-0.1.1.tgz#b24579c3bed4d6d396aeee6d9a8ae7f5482ab7bb"
 
 builtin-modules@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.0.0.tgz#1e587d44b006620d90286cc7a9238bbc6129cab1"
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.1.0.tgz#aad97c15131eb76b65b50ef208e7584cd76a7484"
 
 bytes@3.0.0:
   version "3.0.0"

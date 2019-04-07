@@ -1,5 +1,5 @@
 .DS_Store
 node_modules/
 mod.js
-chunk-*.js
+zipsource.js
 libarchive.js

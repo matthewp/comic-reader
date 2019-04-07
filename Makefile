@@ -1,6 +1,6 @@
 COMPILE=node_modules/.bin/compile
 
-all: compile
+all: mod.js
 .PHONY: all
 
 src/libarchive.js: node_modules/libarchive.js
@@ -9,12 +9,14 @@ src/libarchive.js: node_modules/libarchive.js
 	rm -rf $@/test
 	rm -f $@/.travis.yml $@/jest.config.js $@/LICENSE $@/package.json $@/README.md $@/rollup.config.js
 
-compile: src/index.js
-	$(COMPILE) -f es -o . src/index.js
-	@mv index.js mod.js
+mod.js: $(shell find src -name "*.js")
+	$(COMPILE) -f es -o . --chunks zipsource=src/zipsource.js src/index.js
+	@mv index.js $@
+
+compile: mod.js
 	@cp -R src/libarchive.js .
 .PHONY: compile
 
 clean:
-	rm -rf lib/libarchive.js
+	rm -f mod.js zipsource.js
 .PHONY: clean
