@@ -440,8 +440,8 @@ class PinchZoom extends HTMLElement {
       clearTimeout(this._wheelId);
       this._wheelId = setTimeout(this._wheelEnd, 250, this);
 
-      if(this._startScale == null) {
-        this._startScale = this._transform.d;
+      if(this._start == null) {
+        this._makeStart();
       }
 
       const currentRect = this._positioningEl.getBoundingClientRect();
@@ -502,9 +502,8 @@ class PinchZoom extends HTMLElement {
         return false;
     event.preventDefault();
 
-    if(this._startScale == null) {
-      this._start = { x: this._transform.e, y: this._transform.f, scale: this._transform.d };
-      this._startScale = this._transform.d;
+    if(this._start == null) {
+        this._makeStart();
     }
 
     this._undoTransitions();
@@ -581,7 +580,6 @@ class PinchZoom extends HTMLElement {
     }
     this._start = null;
     this._startTime = null;
-    this._startScale = null;
   }
   /** Transform the view & fire a change event */
   _applyChange(opts = {}) {
@@ -604,6 +602,9 @@ class PinchZoom extends HTMLElement {
           x: matrix.e,
           y: matrix.f,
       });
+  }
+  _makeStart() {
+    this._start = { x: this._transform.e, y: this._transform.f, scale: this._transform.d };
   }
 }
 
