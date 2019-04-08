@@ -70,14 +70,15 @@ function init(host) {
   let canvasNode = frag.querySelector('canvas');
   let zoomNode = frag.querySelector('comic-reader-zoom');
   let ctx = canvasNode.getContext('2d');
-  let imgNode = document.createElement('img');
-
-  /* State variables */
-  let url;
+  let imgNode;
 
   /* DOM update functions */
-  function setImgNode(value) {
-    imgNode.src = value;
+  function setImg(value) {
+    if(value !== imgNode) {
+      imgNode = value;
+      drawCanvas();
+      resetZoomPosition();
+    }
   }
 
   function setContainerLoaded(value) {
@@ -92,9 +93,8 @@ function init(host) {
     });
   }
 
-  async function setCanvasURL(url) {
+  async function drawCanvas() {
     setContainerLoaded(false);
-    setImgNode(url);
     await waitOnImg(imgNode);
     await wait(50);
 
@@ -105,15 +105,6 @@ function init(host) {
     canvasNode.height = h;
     ctx.drawImage(imgNode, 0, 0, w, h);
     setContainerLoaded(true);
-  }
-
-  /* State update functions */
-  function setURL(value) {
-    if(value !== url) {
-      url = value;
-      setCanvasURL(value);
-      resetZoomPosition();
-    }
   }
 
   /* Logic functions */
@@ -169,7 +160,7 @@ function init(host) {
   }
 
   function update(data = {}) {
-    if(data.url) return setURL(data.url);
+    if(data.image) setImg(data.image);
     return frag;
   }
 
@@ -199,8 +190,8 @@ class ComicReaderPage extends HTMLElement {
     this[VIEW].disconnect();
   }
 
-  set url(url) {
-    this[VIEW]({ url });
+  set image(image) {
+    this[VIEW]({ image });
   }
 }
 

@@ -290,7 +290,7 @@ function init(shadow) {
   let currentReaderPageNode = readerPageNodes[0];
 
   /* State variables */
-  let src, source, title, totalPages;
+  let src, source, title, totalPages, imgMap;
   let viewerX = 0, navEnabled = true,
   currentPage = 0, nextPage = 0, numberOfItemsLoaded = 0;
 
@@ -366,6 +366,7 @@ function init(shadow) {
   function setSrc(value) {
     if(src !== value) {
       src = value;
+      imgMap = new Map();
       loadSrc();
     }
   }
@@ -443,6 +444,16 @@ function init(shadow) {
     }
   }
 
+  function getImgFromUrl(url) {
+    let img = imgMap.get(url);
+    if(!img) {
+      img = document.createElement('img');
+      img.src = url;
+      imgMap.set(url, img);
+    }
+    return img;
+  }
+
   /* Logic functions */
   async function preloadIdle() {
     requestIdleCallback(preload);
@@ -461,8 +472,9 @@ function init(shadow) {
 
   async function loadInto(i, readerPage) {
     let url = await source.item(i);
+    let img = getImgFromUrl(url);
     readerPage.dataset.page = i;
-    readerPage.url = url;
+    readerPage.image = img;
   }
 
   async function loadPage(i) {
@@ -498,6 +510,7 @@ function init(shadow) {
   function closeBook() {
     if(source && source.close) {
       source.close();
+      imgMap = null;
     }
   }
 
