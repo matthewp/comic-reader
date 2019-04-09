@@ -1,6 +1,6 @@
 {
   "name": "comic-reader",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "A comic reader web component",
   "main": "mod.js",
   "module": "mod.js",
