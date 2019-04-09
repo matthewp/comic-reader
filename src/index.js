@@ -501,6 +501,7 @@ function init(shadow) {
     await loadPage(currentPage);
     preloadIdle();
     setCurrentPageNode();
+    setTotalPages(source.getLength());
     rotatePage();
 
     // Dispatch the load event
