@@ -539,7 +539,7 @@ function init(shadow) {
     disableNav();
     setViewerUpdating(true);
 
-    let expectedPages, inMiddle = false;
+    let expectedPages, newViewerX = 0;
     setReaderPageCurrent(currentReaderPageNode, false);
 
     if(nextPage < 2) {
@@ -597,15 +597,13 @@ function init(shadow) {
       if(expectedNumber === nextPage) {
         setReaderPageCurrent(readerPage, true);
         currentReaderPageNode = readerPage;
-        inMiddle = i === 2;
+        newViewerX = 0 - (i * 20);
       }
 
       i++;
     }
 
-    if(inMiddle) {
-      setViewerX(-40);
-    }
+    setViewerX(newViewerX);
     
     setTimeout(enableNav, 0);
     setCurrentPage(nextPage);
