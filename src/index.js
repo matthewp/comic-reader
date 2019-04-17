@@ -610,6 +610,13 @@ function init(shadow) {
     setCurrentPage(nextPage);
   }
 
+  function initFullscreen() {
+    // Already in fullscreen mode
+    if(document.fullscreenElement) {
+      fullscreenBtn.setAttribute('hidden', '');
+    }
+  }
+
   /* Event dispatchers */
   function dispatchLoad() {
     let ev = new CustomEvent('load');
@@ -680,6 +687,8 @@ function init(shadow) {
   }
 
   /* Initialization */
+  initFullscreen();
+
   function connect() {
     for(let readerPage of readerPageNodes) {
       readerPage.addEventListener('nav-previous', onNavPrevious);
