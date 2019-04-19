@@ -209,6 +209,12 @@ template.innerHTML = /* html */ `
     .fit-width comic-reader-page {
       width: 100%;
     }
+
+    @media all and (display-mode: fullscreen) {
+      #root:not(:fullscreen) #fullscreen {
+        display: none;
+      }
+    }
   </style>
   <div id="root" tabindex="0">
     <div class="top-pane pane controls">
@@ -610,13 +616,6 @@ function init(shadow) {
     setCurrentPage(nextPage);
   }
 
-  function initFullscreen() {
-    // Already in fullscreen mode
-    if(document.fullscreenElement) {
-      fullscreenBtn.setAttribute('hidden', '');
-    }
-  }
-
   /* Event dispatchers */
   function dispatchLoad() {
     let ev = new CustomEvent('load');
@@ -687,8 +686,6 @@ function init(shadow) {
   }
 
   /* Initialization */
-  initFullscreen();
-
   function connect() {
     for(let readerPage of readerPageNodes) {
       readerPage.addEventListener('nav-previous', onNavPrevious);
