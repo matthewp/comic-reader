@@ -119,9 +119,11 @@ function init(host) {
   }
 
   function getClickPosition(ev) {
-    let w = canvasNode.offsetWidth;
-    let third = w / 3;
-    let x = ev.offsetX;
+    let { left, width } = containerNode.getBoundingClientRect();
+    let pageX = ev.pageX;
+    let x = pageX - left;
+
+    let third = width / 3;
     return x < third ? 0 : x > (third * 2) ? 2 : 1;
   }
 

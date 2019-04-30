@@ -560,6 +560,10 @@ class PinchZoom extends HTMLElement {
         scale: scale < 1 ? 1 : scale
       });
     } else {
+      if(this._start == null) {
+        this._makeStart();
+      }
+
       const { x: startX, y: startY, scale: startScale } = this._start;
       const duration = Date.now() - this._startTime;
 
