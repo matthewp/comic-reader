@@ -6,6 +6,7 @@ template.innerHTML = /* html */ `
     :host {
       display: block;
       --white: #fff;
+      --pane-bg: #36454F;
     }
 
     #root {
@@ -98,10 +99,41 @@ template.innerHTML = /* html */ `
       opacity: 1;
     }
 
-    .bottom-pane {
-      background-color: #36454F;
+    .browser {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
       bottom: 0;
-      transform: translateY(50px);
+      background: var(--pane-bg);
+      z-index: 1;
+      transform: translateY(100%);
+      transition: transform .4s;
+    }
+
+    .browser.open {
+      transform: translateY(0%);
+    }
+
+    .browser header {
+      background: inherit;
+      padding: .2rem .2em .2em .75em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .browser h1 {
+      font-size: 22px;
+      margin: 0;
+      color: var(--white);
+    }
+
+    .bottom-pane {
+      background: var(--pane-bg);
+      bottom: 0;
+      padding: .2rem;
+      transform: translateY(calc(50px + .4rem));
       transition: transform .5s;
     }
 
@@ -240,7 +272,23 @@ template.innerHTML = /* html */ `
       </div>
     </div>
 
+    <div class="browser">
+      <header class="pane">
+        <h1>Browse pages</h1>
+        <button id="close-browser" class="icon">        
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <title>Close page browser</title>
+            <path d="M405 136.798L375.202 107 256 226.202 136.798 107 107 136.798 226.202 256 107 375.202 136.798 405 256 285.798 375.202 405 405 375.202 285.798 256z"/></svg>
+        </button>
+      </header>
+    </div>
+
     <div class="bottom-pane pane controls">
+      <button id="browse" class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <title>Browse pages</title>
+          <path d="M409.6 64H102.4C81.3 64 64 81.3 64 102.4v307.2c0 21.1 17.3 38.4 38.4 38.4h307.2c21.1 0 38.4-17.3 38.4-38.4V102.4c0-21.1-17.3-38.4-38.4-38.4zM179.2 409.6h-76.8v-76.8h76.8v76.8zm0-115.2h-76.8v-76.8h76.8v76.8zm0-115.2h-76.8v-76.8h76.8v76.8zm115.2 230.4h-76.8v-76.8h76.8v76.8zm0-115.2h-76.8v-76.8h76.8v76.8zm0-115.2h-76.8v-76.8h76.8v76.8zm115.2 230.4h-76.8v-76.8h76.8v76.8zm0-115.2h-76.8v-76.8h76.8v76.8zm0-115.2h-76.8v-76.8h76.8v76.8z"/></svg>
+      </button>
       <button id="fit-width" class="icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
           <title>Fit width</title>
@@ -282,8 +330,10 @@ function init(shadow) {
   let controlsNodes = frag.querySelectorAll('.controls');
   let progressNode = frag.querySelector('progress');
   let progressContainerNode = frag.querySelector('.progress-container');
+  let browserNode = frag.querySelector('.browser');
   let fitHeightBtn = frag.querySelector('#fit-height');
   let fitWidthBtn = frag.querySelector('#fit-width');
+  let browseBtn = frag.querySelector('#browse');
   let titleNode = frag.querySelector('#book-title');
   let currentPageNode = frag.querySelector('#current-page');
   let totalPagesNode = frag.querySelector('#total-pages');
@@ -294,6 +344,9 @@ function init(shadow) {
   let contractNode = contractSVG();
   let readerPageNodes = Array.from(frag.querySelectorAll('comic-reader-page'));
   let currentReaderPageNode = readerPageNodes[0];
+
+  /* DOM views */
+  let updateBrowser;
 
   /* State variables */
   let src, source, title, totalPages, imgMap;
@@ -366,6 +419,10 @@ function init(shadow) {
   function setTopLeftNav() {
     let nodes = topLeftNavSlot.assignedNodes();
     topPaneNode.classList[nodes.length ? 'add' : 'remove']('show-left');
+  }
+
+  function setBrowserOpen() {
+    browserNode.classList.add('open');
   }
 
   /* State update functions */
@@ -461,6 +518,10 @@ function init(shadow) {
   }
 
   /* Logic functions */
+  function browserIsOpen() {
+    return browserNode.classList.contains('open');
+  }
+
   async function preloadIdle() {
     requestIdleCallback(preload);
   }
@@ -616,6 +677,15 @@ function init(shadow) {
     setCurrentPage(nextPage);
   }
 
+  async function loadBrowser() {
+    if(!updateBrowser) {
+      let init = (await import('./browser.js')).default;
+      updateBrowser = init(browserNode);
+    }
+
+    updateBrowser({ currentPage, setPage });
+  }
+
   /* Event dispatchers */
   function dispatchLoad() {
     let ev = new CustomEvent('load');
@@ -644,6 +714,11 @@ function init(shadow) {
 
   function onFitWidthClick() {
     setViewerDisplay('fit-width');
+  }
+
+  function onBrowseClick() {
+    setBrowserOpen();
+    loadBrowser();
   }
 
   function onKeyUp(ev) {
@@ -685,6 +760,13 @@ function init(shadow) {
     setTopLeftNav();
   }
 
+  function onBrowserTransition() {
+    if(browserIsOpen()) {
+      updateBrowser({ source });
+    }
+    setControlsOpen(false);
+  }
+
   /* Initialization */
   function connect() {
     for(let readerPage of readerPageNodes) {
@@ -695,9 +777,11 @@ function init(shadow) {
     
     fitHeightBtn.addEventListener('click', onFitHeightClick);
     fitWidthBtn.addEventListener('click', onFitWidthClick);
+    browseBtn.addEventListener('click', onBrowseClick);
     fullscreenBtn.addEventListener('click', onFullscreenClick);
     rootNode.addEventListener('keyup', onKeyUp);
     viewerNode.addEventListener('transitionend', onViewerTransition);
+    browserNode.addEventListener('transitionend', onBrowserTransition);
     topLeftNavSlot.addEventListener('slotchange', onTopLeftSlotChange);
   }
 
@@ -710,8 +794,11 @@ function init(shadow) {
 
     fitHeightBtn.removeEventListener('click', onFitHeightClick);
     fitWidthBtn.removeEventListener('click', onFitWidthClick);
+    browseBtn.removeEventListener('click', onBrowseClick);
     fullscreenBtn.removeEventListener('click', onFullscreenClick);
     rootNode.removeEventListener('keyup', onKeyUp);
+    viewerNode.removeEventListener('transitionend', onViewerTransition);
+    browserNode.removeEventListener('transitionend', onBrowserTransition);
     topLeftNavSlot.removeEventListener('slotchange', onTopLeftSlotChange);
     closeBook();
   }
