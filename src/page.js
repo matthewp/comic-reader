@@ -120,7 +120,7 @@ function init(host) {
 
   function getClickPosition(ev) {
     let { left, width } = containerNode.getBoundingClientRect();
-    let pageX = ev.pageX;
+    let pageX = ev.detail.pageX;
     let x = pageX - left;
 
     let third = width / 3;
