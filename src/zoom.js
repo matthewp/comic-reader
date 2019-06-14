@@ -581,6 +581,12 @@ class PinchZoom extends HTMLElement {
           y: momY.destination
         });
       }
+
+      // If it was just a tap, dispatch an event that is used instead of click
+      if(Math.abs(startX - x) === 0 && Math.abs(startY - y) === 0) {
+        let ev = new CustomEvent('tap');
+        this.dispatchEvent(ev);
+      }
     }
     this._start = null;
     this._startTime = null;

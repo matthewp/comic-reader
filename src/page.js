@@ -154,11 +154,11 @@ function init(host) {
 
   /* Init functionality */
   function connect() {
-    containerNode.addEventListener('click', onImgClick);
+    containerNode.addEventListener('tap', onImgClick);
   }
 
   function disconnect() {
-    containerNode.removeEventListener('click', onImgClick);
+    containerNode.removeEventListener('tap', onImgClick);
   }
 
   function update(data = {}) {
