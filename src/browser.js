@@ -136,6 +136,10 @@ template.innerHTML = /* html */ `
       padding: 10px;
     }
 
+    .browser figcaption {
+      font-weight: 600;
+    }
+
     .browser ul img {
       max-width: 100%;
     }

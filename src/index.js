@@ -117,7 +117,7 @@ template.innerHTML = /* html */ `
 
     .browser header {
       background: inherit;
-      padding: .2rem .2em .2em .75em;
+      padding: .5em .2em .5em .75em;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -132,8 +132,8 @@ template.innerHTML = /* html */ `
     .bottom-pane {
       background: var(--pane-bg);
       bottom: 0;
-      padding: .2rem;
-      transform: translateY(calc(50px + .4rem));
+      padding: .5rem;
+      transform: translateY(calc(50px + 1rem));
       transition: transform .5s;
     }
 
