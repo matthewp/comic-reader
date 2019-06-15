@@ -270,8 +270,10 @@ class PinchZoom extends HTMLElement {
           }
       });
       this._onAnimationEnd = this._onAnimationEnd.bind(this);
+      this._onClick = this._onClick.bind(this);
       this.addEventListener('wheel', event => this._onWheel(event));
       this.addEventListener('transitionend', this._onAnimationEnd);
+      this.addEventListener('click', this._onClick, true);
   }
   static get observedAttributes() { return [minScaleAttr]; }
   attributeChangedCallback(name, oldValue, newValue) {
@@ -495,6 +497,13 @@ class PinchZoom extends HTMLElement {
   _onAnimationEnd() {
     this._undoTransitions();
   }
+  _onClick(ev) {
+      if(this._cancelClick) {
+          ev.stopPropagation();
+          ev.preventDefault();
+          this._cancelClick = false;
+      }
+  }
   _onPointerStart(pointerTracker, event) {
     this._startTime = Date.now();
     // We only want to track 2 pointers at most
@@ -566,8 +575,9 @@ class PinchZoom extends HTMLElement {
 
       const { x: startX, y: startY, scale: startScale } = this._start;
       const duration = Date.now() - this._startTime;
+      const scaleIsTheSame = startScale === scale;
 
-      if(startScale === scale) {
+      if(scaleIsTheSame) {
         const minX = 0 - (elWidth - thisWidth);
         const minY = 0 - (elHeight - thisHeight);
         const momX = momentum(x, startX, duration, minX, 0);
@@ -580,6 +590,15 @@ class PinchZoom extends HTMLElement {
           x: momX.destination,
           y: momY.destination
         });
+      }
+
+      // If it was just a tap, dispatch an event that is used instead of click
+      const isMouse = event.pointerType === 'mouse';
+      const cancelClick = isMouse && (
+          !scaleIsTheSame || Math.abs(startX - x) >= 2 || Math.abs(startY - y) >= 2
+      );
+      if(cancelClick) {
+        this._cancelClick = true;
       }
     }
     this._start = null;

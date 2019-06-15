@@ -145,6 +145,9 @@ function init(host) {
 
   /* Event listeners */
   function onImgClick(ev) {
+    if(ev.defaultPrevented) {
+      return;
+    }
     switch(getClickPosition(ev)) {
       case 0: dispatchNavPrevious(); break;
       case 2: dispatchNavNext(); break;
