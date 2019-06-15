@@ -120,7 +120,7 @@ function init(host) {
 
   function getClickPosition(ev) {
     let { left, width } = containerNode.getBoundingClientRect();
-    let pageX = ev.detail.pageX;
+    let pageX = ev.pageX;
     let x = pageX - left;
 
     let third = width / 3;
@@ -145,6 +145,9 @@ function init(host) {
 
   /* Event listeners */
   function onImgClick(ev) {
+    if(ev.defaultPrevented) {
+      return;
+    }
     switch(getClickPosition(ev)) {
       case 0: dispatchNavPrevious(); break;
       case 2: dispatchNavNext(); break;
@@ -154,11 +157,11 @@ function init(host) {
 
   /* Init functionality */
   function connect() {
-    containerNode.addEventListener('tap', onImgClick);
+    containerNode.addEventListener('click', onImgClick);
   }
 
   function disconnect() {
-    containerNode.removeEventListener('tap', onImgClick);
+    containerNode.removeEventListener('click', onImgClick);
   }
 
   function update(data = {}) {

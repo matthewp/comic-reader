@@ -71,13 +71,10 @@ export function navigate(dir) {
   } else {
     x = rect.left + 10;
   }
-  let ev = new CustomEvent('tap', {
-    detail: {
-      clientX: x,
-      screenX: x,
-      pageX: x,
-      screenY: 12
-    }
+  let ev = new MouseEvent('click', {
+    clientX: x,
+    screenX: x,
+    screenY: 12
   });
   el.dispatchEvent(ev);
 }
