@@ -1,4 +1,5 @@
 let pageView;
+const aspectRatio = 0.6474609375;
 
 {
   const template = document.createElement('template');
@@ -102,6 +103,7 @@ let pageView;
       if(data.url) setUrl(data.url);
       if(data.onPageSelect) setOnPageSelect(data.onPageSelect);
       if(data.scrollCurrentIntoView) scrollIntoViewIfCurrent();
+
       return frag;
     }
 
@@ -137,6 +139,7 @@ template.innerHTML = /* html */ `
     .browser ul button {
       background: transparent;
       height: 100%;
+      width: 100%;
       border: none;
       padding: 0;
       font: inherit;
@@ -159,7 +162,8 @@ template.innerHTML = /* html */ `
     }
 
     .browser ul img {
-      max-width: 100%;
+      width: 100%;
+      min-height: var(--img-height);
       flex-grow: 1;
       object-fit: cover;
     }
@@ -184,11 +188,22 @@ function init(root) {
   let source, currentPage, setPage;
 
   /* DOM update functions */
+  function calculateImgHeight() {
+    let imgNode = listNode.querySelector('img');
+    let height = imgNode.width / aspectRatio;
+    listNode.style.setProperty('--img-height', height + 'px');
+  }
+
   function addPages() {
     let len = source.getLength();
     for(let i = 0; i < len; i++) {
       let update = pageView();
       listNode.appendChild(update());
+
+      if(i === 0) {
+        calculateImgHeight();
+      }
+
       pages.push(update);
     }
   }
@@ -199,7 +214,7 @@ function init(root) {
     }
   }
 
-  async function updatePages(scrollCurrentIntoView) {
+  async function updatePages() {
     let len = source.getLength(), i = 0;
     let updateForCurrent;
     while(len > i) {
