@@ -10,7 +10,7 @@ src/libarchive.js: node_modules/libarchive.js
 	rm -f $@/.travis.yml $@/jest.config.js $@/LICENSE $@/package.json $@/README.md $@/rollup.config.js
 
 mod.js: $(shell find src -name "*.js")
-	$(COMPILE) -f es -o . --chunks zipsource=src/zipsource.js src/index.js
+	$(COMPILE) -f es -o . --chunks zipsource=src/zipsource.js,browser=src/browser.js src/index.js
 	@mv index.js $@
 
 compile: mod.js
@@ -18,5 +18,5 @@ compile: mod.js
 .PHONY: compile
 
 clean:
-	rm -f mod.js zipsource.js
+	rm -f mod.js zipsource.js browser.js
 .PHONY: clean
