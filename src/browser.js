@@ -33,6 +33,10 @@ let pageView;
       liNode.classList[current ? 'add' : 'remove']('current');
     }
 
+    function setLiScrolled() {
+      liNode.scrollIntoView(false);
+    }
+
     function setImgSrc() {
       imgNode.src = url;
     }
@@ -80,6 +84,13 @@ let pageView;
       }
     }
 
+    /* Logic functions */
+    function scrollIntoViewIfCurrent() {
+      if(current) {
+        setLiScrolled();
+      }
+    }
+
     /* Initialization */
     function disconnect() {
       btn.removeEventListener('click', onPageSelect);
@@ -90,6 +101,7 @@ let pageView;
       if(data.page) setPage(data.page);
       if(data.url) setUrl(data.url);
       if(data.onPageSelect) setOnPageSelect(data.onPageSelect);
+      if(data.scrollCurrentIntoView) scrollIntoViewIfCurrent();
       return frag;
     }
 
@@ -124,6 +136,7 @@ template.innerHTML = /* html */ `
 
     .browser ul button {
       background: transparent;
+      height: 100%;
       border: none;
       padding: 0;
       font: inherit;
@@ -132,16 +145,23 @@ template.innerHTML = /* html */ `
 
     .browser figure {
       text-align: center;
+      box-sizing: border-box;
+      height: 100%;
       margin: 0;
       padding: 10px;
+      display: flex;
+      flex-direction: column;
     }
 
     .browser figcaption {
       font-weight: 600;
+      padding: 5px 0;
     }
 
     .browser ul img {
       max-width: 100%;
+      flex-grow: 1;
+      object-fit: cover;
     }
   </style>
   <div class="pages"><ul></ul></div>
@@ -179,13 +199,25 @@ function init(root) {
     }
   }
 
-  async function updatePages() {
+  async function updatePages(scrollCurrentIntoView) {
     let len = source.getLength(), i = 0;
+    let updateForCurrent;
     while(len > i) {
       let url = await source.item(i);
       let update = pages[i];
-      update({ page: i + 1, url, current: i === currentPage, onPageSelect });
+      let current = i === currentPage;
+      update({
+        page: i + 1,
+        url, current, onPageSelect
+      });
+      if(current) {
+        updateForCurrent = update;
+      }
       i++;
+    }
+
+    if(updateForCurrent) {
+      updateForCurrent({ scrollCurrentIntoView: true });
     }
   }
 
