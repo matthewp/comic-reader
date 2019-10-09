@@ -563,6 +563,9 @@ function init(shadow) {
       if(typeof src === 'string') {
         let url = new URL(src, location.href).toString();
         let res = await fetch(url);
+        if(!res.ok) {
+          return;
+        }
         blob = await res.blob();
       }
 
