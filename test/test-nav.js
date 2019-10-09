@@ -1,25 +1,23 @@
 import * as helpers from './helpers.js';
 
-describe('Navigation', function() {
-  this.timeout(10000);
-
+QUnit.module('Navigation', hooks => {
   let undo;
-  beforeEach(async () => {
+  hooks.beforeEach(async () => {
     undo = await helpers.mount();
   });
 
-  afterEach(() => {
+  hooks.afterEach(() => {
     undo();
   });
 
-  it('Can navigate to the next page', async () => {
+  QUnit.test('Can navigate to the next page', async assert => {
     let p = helpers.waitFor('page');
     helpers.navigate('right');
     let { detail: pageNumber } = await p;
     assert.equal(pageNumber, 2, 'Now on page 2');
   });
 
-  it('Can navigate quickly without losing its spot', async () => {
+  QUnit.test('Can navigate quickly without losing its spot', async assert => {
     await helpers.navigateTo(5);
     let p = helpers.waitFor('page');
     let { detail: pageNumber } = await p;
@@ -30,7 +28,7 @@ describe('Navigation', function() {
     assert.equal(page.dataset.page, "5", "Index 5");
   });
 
-  it('Navigating back stops on the first page', async () => {
+  QUnit.test('Navigating back stops on the first page', async assert => {
     await helpers.navigateTo(2);
     let p = helpers.waitFor('page');
     let { detail: pageNumber } = await p;

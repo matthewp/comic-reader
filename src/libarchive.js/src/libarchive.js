@@ -1,3 +1,4 @@
+import { CompressedFile } from "./compressed-file.js";
 
 
 export class Archive{
@@ -8,7 +9,7 @@ export class Archive{
      */
     static init(options = {}){
         Archive._options = {
-            workerUrl: 'webworker/worker.js',
+            workerUrl: '../dist/worker-bundle.js',
             ...options
         };
         return Archive._options;
@@ -60,6 +61,33 @@ export class Archive{
     }
 
     /**
+     * detect if archive has encrypted data
+     * @returns {boolean|null} null if could not be determined
+     */
+    hasEncryptedData(){
+        return this._postMessage({type: 'CHECK_ENCRYPTION'}, 
+            (resolve,reject,msg) => {
+                if( msg.type === 'ENCRYPTION_STATUS' ){
+                    resolve(msg.status);
+                }
+            }
+        );
+    }
+
+    /**
+     * set password to be used when reading archive
+     */
+    usePassword(archivePassword){
+        return this._postMessage({type: 'SET_PASSPHRASE', passphrase: archivePassword},
+            (resolve,reject,msg) => {
+                if( msg.type === 'PASSPHRASE_STATUS' ){
+                    resolve(msg.status);
+                }
+            }
+        );
+    }
+
+    /**
      * Returns object containing directory structure and file information 
      * @returns {Promise<object>}
      */
@@ -69,9 +97,10 @@ export class Archive{
         }
         return this._postMessage({type: 'LIST_FILES'}, (resolve,reject,msg) => {
             if( msg.type === 'ENTRY' ){
-                const [ target, prop ] = this._getProp(this._content,msg.entry.path);
-                if( msg.entry.type === 'FILE' ){
-                    target[prop] = null;                    
+                const entry = msg.entry;
+                const [ target, prop ] = this._getProp(this._content,entry.path);
+                if( entry.type === 'FILE' ){
+                    target[prop] = new CompressedFile(entry.fileName,entry.size,entry.path,this);                    
                 }
                 return true;
             }else if( msg.type === 'END' ){
@@ -87,6 +116,19 @@ export class Archive{
         });
     }
 
+    extractSingleFile(target){
+        return this._postMessage({type: 'EXTRACT_SINGLE_FILE', target: target}, 
+            (resolve,reject,msg) => {
+                if( msg.type === 'FILE' ){
+                    const file = new File([msg.entry.fileData], msg.entry.fileName, {
+                        type: 'application/octet-stream'
+                    });
+                    resolve(file);
+                }
+            }
+        );
+    }
+
     /**
      * Returns object containing directory structure and extracted File objects 
      * @param {Function} extractCallback
@@ -100,11 +142,15 @@ export class Archive{
             if( msg.type === 'ENTRY' ){
                 const [ target, prop ] = this._getProp(this._content,msg.entry.path);
                 if( msg.entry.type === 'FILE' ){
-                    target[prop] = msg.entry.file;
-                    setTimeout(extractCallback.bind(null,{
-                        file: msg.entry.file,
-                        path: msg.entry.path,
-                    }));
+                    target[prop] = new File([msg.entry.fileData], msg.entry.fileName, {
+                        type: 'application/octet-stream'
+                    });
+                    if (extractCallback !== undefined) {
+                        setTimeout(extractCallback.bind(null,{
+                            file: target[prop],
+                            path: msg.entry.path,
+                        }));
+                    }
                 }
                 return true;
             }else if( msg.type === 'END' ){
@@ -116,7 +162,7 @@ export class Archive{
     }
 
     _cloneContent(obj){
-        if( obj instanceof File || obj === null ) return obj;
+        if( obj instanceof File || obj instanceof CompressedFile || obj === null ) return obj;
         const o = {};
         for( const prop of Object.keys(obj) ){
             o[prop] = this._cloneContent(obj[prop]);
@@ -127,7 +173,7 @@ export class Archive{
     _objectToArray(obj,path = ''){
         const files = [];
         for( const key of Object.keys(obj) ){
-            if( obj[key] instanceof File || obj[key] === null ){
+            if( obj[key] instanceof File || obj[key] instanceof CompressedFile || obj[key] === null ){
                 files.push({
                     file: obj[key] || key,
                     path: path
