@@ -76,7 +76,7 @@ template.innerHTML = /* html */ `
       display: inline-block;
     }
 
-    :host(:not([title])) .top-pane #page-progress {
+    :host(:not([title])) .top-pane:not(.has-title) #page-progress {
       grid-row: 1 / 3;
     }
 
@@ -421,6 +421,10 @@ function init(shadow) {
     topPaneNode.classList[nodes.length ? 'add' : 'remove']('show-left');
   }
 
+  function setTopHasTitle() {
+    topPaneNode.classList[title ? 'add' : 'remove']('has-title');
+  }
+
   function setBrowserOpen() {
     browserNode.classList.add('open');
   }
@@ -497,6 +501,7 @@ function init(shadow) {
     if(title !== value) {
       title = value;
       setTitleNode();
+      setTopHasTitle();
     }
   }
 
@@ -558,6 +563,9 @@ function init(shadow) {
       if(typeof src === 'string') {
         let url = new URL(src, location.href).toString();
         let res = await fetch(url);
+        if(!res.ok) {
+          return;
+        }
         blob = await res.blob();
       }
 
