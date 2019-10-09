@@ -18,6 +18,7 @@ export class ArchiveReader{
         this._wasmModule = wasmModule;
         this._runCode = wasmModule.runCode;
         this._file = null;
+        this._passphrase = null;
     }
 
     /**
@@ -49,37 +50,63 @@ export class ArchiveReader{
     }
 
     /**
+     * detect if archive has encrypted data
+     * @returns {boolean|null} null if could not be determined
+     */
+    hasEncryptedData(){
+        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength, this._passphrase );
+        this._runCode.getNextEntry(this._archive);
+        const status = this._runCode.hasEncryptedEntries(this._archive);
+        if( status === 0 ){
+            return false;
+        } else if( status > 0 ){
+            return true;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * set passphrase to be used with archive
+     * @param {*} passphrase 
+     */
+    setPassphrase(passphrase){
+        this._passphrase = passphrase;
+    }
+
+    /**
      * get archive entries
      * @param {boolean} skipExtraction
+     * @param {string} except don't skip this entry
      */
-    *entries(skipExtraction = false){
-        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength );
+    *entries(skipExtraction = false, except = null){
+        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength, this._passphrase );
         let entry;
         while( true ){
             entry = this._runCode.getNextEntry(this._archive);
             if( entry === 0 ) break;
+
             const entryData = {
                 size: this._runCode.getEntrySize(entry),
                 path: this._runCode.getEntryName(entry),
-                type: TYPE_MAP[this._runCode.getEntryType(entry)]
+                type: TYPE_MAP[this._runCode.getEntryType(entry)],
+                ref: entry,
             };
-            if( skipExtraction ){
+
+            if( entryData.type === 'FILE' ){
+                let fileName = entryData.path.split('/');
+                entryData.fileName = fileName[fileName.length - 1];
+            }
+
+            if( skipExtraction && except !== entryData.path ){
                 this._runCode.skipEntry(this._archive);
             }else{
                 const ptr = this._runCode.getFileData(this._archive,entryData.size);
                 if( ptr < 0 ){
                     throw new Error(this._runCode.getError(this._archive));
                 }
-                const data = this._wasmModule.HEAP8.slice(ptr,ptr+entryData.size);
+                entryData.fileData = this._wasmModule.HEAP8.slice(ptr,ptr+entryData.size);
                 this._wasmModule._free(ptr);
-
-                if( entryData.type === 'FILE' ){
-                    let fileName = entryData.path.split('/');
-                    fileName = fileName[fileName.length - 1];
-                    entryData.file = new File([data], fileName, {
-                        type: 'application/octet-stream'
-                    });
-                }
             }
             yield entryData;
         }

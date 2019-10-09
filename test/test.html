@@ -1,27 +1,12 @@
 <!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
 <title>&lt;comic-reader&gt; tests</title>
-<link href="https://unpkg.com/mocha@4.1.0/mocha.css" rel="stylesheet" />
-<style>
-  #host comic-reader {
-    width: 600px;
-    height: 300px;
-    margin: auto;
-  }
-</style>
+<link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.9.2.css">
+
 <div id="host"></div>
-<div id="mocha"></div>
-
-<script src="https://unpkg.com/chai/chai.js"></script>
-<script src="https://unpkg.com/mocha@4.1.0/mocha.js"></script>
-<script>
-  mocha.setup('bdd');
-  assert = chai.assert;
-</script>
-
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<script src="https://code.jquery.com/qunit/qunit-2.9.2.js"></script>
 <script type="module" src="./test-nav.js"></script>
-
-<script type="module">
-  window.addEventListener('load', () => {
-    mocha.run();
-  });
-</script>
