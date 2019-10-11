@@ -7,6 +7,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.setTemplateFormats([ 'md' ]);
   eleventyConfig.addPassthroughCopy('site/styles');
   eleventyConfig.addPassthroughCopy('site/images');
+  eleventyConfig.addPassthroughCopy('site/site.webmanifest');
 
   eleventyConfig.addPlugin(pluginSyntaxHighlight);
 
