@@ -15,8 +15,8 @@ title: comic-reader
 {% if includeReader %}
 <script type="module" src="../mod.js"></script>
 {% endif %}
-{%- for link in preloadFetch -%}
-<link rel="preload" as="fetch" href="{{ link }}" crossorigin="anonymous">
+{%- for link in preloadImage -%}
+<link rel="preload" as="image" href="{{ link }}">
 {%- endfor -%}
 
 <body{% if id %} id="{{ id }}"{% endif %} class="home">
