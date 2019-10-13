@@ -158,11 +158,13 @@ template.innerHTML = /* html */ `
       fill: var(--white);
     }
 
-    .progress-container {
+    .progress-container,
+    .cover {
       display: none;
     }
 
-    .progress-container.open {
+    .progress-container.open,
+    #root:not(.first-page-loaded) .cover {
       display: block;
       position: absolute;
       left: 0;
@@ -259,6 +261,7 @@ template.innerHTML = /* html */ `
           <path d="M396.795 396.8H320V448h128V320h-51.205zM396.8 115.205V192H448V64H320v51.205zM115.205 115.2H192V64H64v128h51.205zM115.2 396.795V320H64v128h128v-51.205z"/></svg>
       </button>
     </div>
+    <img alt="Book cover" class="cover" />
     <div class="progress-container">
       <progress value="0" max="100"></progress>
     </div>
@@ -330,6 +333,7 @@ function init(shadow) {
   let controlsNodes = frag.querySelectorAll('.controls');
   let progressNode = frag.querySelector('progress');
   let progressContainerNode = frag.querySelector('.progress-container');
+  let coverImgNode = frag.querySelector('.cover');
   let browserNode = frag.querySelector('.browser');
   let fitHeightBtn = frag.querySelector('#fit-height');
   let fitWidthBtn = frag.querySelector('#fit-width');
@@ -349,7 +353,7 @@ function init(shadow) {
   let updateBrowser;
 
   /* State variables */
-  let src, source, title, totalPages, imgMap;
+  let cover, src, source, title, totalPages, imgMap;
   let viewerX = 0, navEnabled = true,
   currentPage = 0, nextPage = 0, numberOfItemsLoaded = 0;
 
@@ -360,6 +364,10 @@ function init(shadow) {
 
   function setProgressContainerNode(loading) {
     progressContainerNode.classList[loading ? 'add' : 'remove']('open');
+  }
+
+  function setCoverImgNode(value) {
+    coverImgNode.src = value;
   }
 
   function setViewerDisplay(cn) {
@@ -412,6 +420,10 @@ function init(shadow) {
     currentPageNode.textContent = currentPage + 1;
   }
 
+  function setFirstPageLoaded() {
+    rootNode.classList.add('first-page-loaded');
+  }
+
   function setBookLoaded() {
     rootNode.classList.add('loaded');
   }
@@ -430,6 +442,13 @@ function init(shadow) {
   }
 
   /* State update functions */
+  function setCover(value) {
+    if(cover !== value) {
+      cover = value;
+      setCoverImgNode(value);
+    }
+  }
+
   function setSrc(value) {
     if(src !== value) {
       src = value;
@@ -550,9 +569,16 @@ function init(shadow) {
   }
 
   async function loadPage(i) {
-    setProgressContainerNode(true);
-    await source.item(i, setProgressNode);
-    setProgressContainerNode(false);
+    let showProgress = !cover;
+    if(showProgress) {
+      setProgressContainerNode(true);
+    }
+
+    await source.item(i, updateProgress);
+
+    if(showProgress) {
+      setProgressContainerNode(false);
+    }
   }
 
   async function loadSrc() {
@@ -581,6 +607,12 @@ function init(shadow) {
 
     // Dispatch the load event
     setTimeout(dispatchLoad, 0);
+  }
+
+  function updateProgress(value) {
+    if(!cover) {
+      setProgressNode(value);
+    }
   }
 
   function closeBook() {
@@ -791,6 +823,7 @@ function init(shadow) {
     viewerNode.addEventListener('transitionend', onViewerTransition);
     browserNode.addEventListener('transitionend', onBrowserTransition);
     topLeftNavSlot.addEventListener('slotchange', onTopLeftSlotChange);
+    currentReaderPageNode.addEventListener('draw', setFirstPageLoaded, { once: true });
   }
 
   function disconnect() {
@@ -813,6 +846,7 @@ function init(shadow) {
   setTopLeftNav();
 
   function update(data = {}) {
+    if(data.cover) setCover(data.cover);
     if(data.src) setSrc(data.src);
     if(data.page) setPage(data.page - 1);
     if(data.title) setTitle(data.title);
@@ -829,7 +863,7 @@ const VIEW = Symbol('comic-reader.view');
 
 class ComicReader extends HTMLElement {
   static get observedAttributes() {
-    return ['page', 'src', 'title'];
+    return ['cover', 'page', 'src', 'title'];
   }
 
   constructor() {
@@ -840,7 +874,7 @@ class ComicReader extends HTMLElement {
   connectedCallback() {
     if(!this[VIEW]) {
       let update = this[VIEW] = init.call(this, this.shadowRoot);
-      let frag = update({ src: this._src, page: this._page, title: this._title, backHref: this._backHref });
+      let frag = update({ cover: this._cover, src: this._src, page: this._page, title: this._title, backHref: this._backHref });
       this.shadowRoot.appendChild(frag);
     }
     this[VIEW].connect();
@@ -852,6 +886,17 @@ class ComicReader extends HTMLElement {
 
   attributeChangedCallback(name, _, newVal) {
     this[name] = newVal;
+  }
+
+  get cover() {
+    return this._cover;
+  }
+
+  set cover(cover) {
+    this._cover = cover;
+    if(this[VIEW]) {
+      this[VIEW]({ cover });
+    }
   }
 
   get src() {

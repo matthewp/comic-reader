@@ -80,6 +80,16 @@ let reader = document.querySelector('comic-reader');
 reader.title = 'Baffling Mysteries #9';
 ```
 
+#### cover
+
+Show a cover image while the book is loaded. When loading from an archive such as cbr or cbz there can be a delay before the first page is visible to the user. Using `cover` lets them see an image (usually the cover of the comic) while the loading is happening. As soon as the first page is painted the cover will no longer be shown.
+
+This is similar to the `poster` attribute on `<video>` elements.
+
+```html
+<comic-reader src="./path/to/book.cbz" cover="./path/to/cover.jpg"></comic-reader>
+```
+
 ### Events
 
 These events are emitted:
