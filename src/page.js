@@ -105,6 +105,7 @@ function init(host) {
     canvasNode.height = h;
     ctx.drawImage(imgNode, 0, 0, w, h);
     setContainerLoaded(true);
+    dispatchDraw();
   }
 
   /* Logic functions */
@@ -140,6 +141,11 @@ function init(host) {
 
   function dispatchControls() {
     let ev = new CustomEvent('controls');
+    host.dispatchEvent(ev);
+  }
+
+  function dispatchDraw() {
+    let ev = new CustomEvent('draw');
     host.dispatchEvent(ev);
   }
 
