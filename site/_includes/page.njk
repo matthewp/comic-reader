@@ -15,6 +15,9 @@ title: comic-reader
 {% if includeReader %}
 <script type="module" src="../mod.js"></script>
 {% endif %}
+{%- for script in scripts %}
+<script type="module" src="{{ script }}"></script>
+{%- endfor -%}
 {%- for link in preloadImage -%}
 <link rel="preload" as="image" href="{{ link }}">
 {%- endfor -%}

@@ -25,3 +25,7 @@ clean:
 site:
 	$(ELEVENTY) --input=site --config=site/.eleventy.js
 .PHONY: site
+
+deploy:
+	aws s3 sync _site s3://code.matthewphillips.info/comic-reader --delete
+.PHONY: deploy
