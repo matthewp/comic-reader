@@ -16,7 +16,7 @@ scripts:
 With a tiny bit of code you can easily embed comics on your site.
 
 ```html
-<script type="module" src="https://unpkg.com/comic-reader@0.6.0/mod.js"></script>
+<script type="module" src="https://unpkg.com/comic-reader@0.6.2/mod.js"></script>
 <comic-reader src="https://example.com/whiz-comics-01.cbz"></comic-reader>
 ```
 
