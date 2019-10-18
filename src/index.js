@@ -174,6 +174,7 @@ template.innerHTML = /* html */ `
       display: flex;
       justify-content: center;
       align-items: center;
+      max-width: 100%;
     }
 
     progress {
