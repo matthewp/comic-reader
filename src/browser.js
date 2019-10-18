@@ -34,10 +34,6 @@ const aspectRatio = 0.6474609375;
       liNode.classList[current ? 'add' : 'remove']('current');
     }
 
-    function setLiScrolled() {
-      liNode.scrollIntoView(false);
-    }
-
     function setImgSrc() {
       imgNode.src = url;
     }
@@ -85,13 +81,6 @@ const aspectRatio = 0.6474609375;
       }
     }
 
-    /* Logic functions */
-    function scrollIntoViewIfCurrent() {
-      if(current) {
-        setLiScrolled();
-      }
-    }
-
     /* Initialization */
     function disconnect() {
       btn.removeEventListener('click', onPageSelect);
@@ -102,7 +91,6 @@ const aspectRatio = 0.6474609375;
       if(data.page) setPage(data.page);
       if(data.url) setUrl(data.url);
       if(data.onPageSelect) setOnPageSelect(data.onPageSelect);
-      if(data.scrollCurrentIntoView) scrollIntoViewIfCurrent();
 
       return frag;
     }
@@ -216,7 +204,6 @@ function init(root) {
 
   async function updatePages() {
     let len = source.getLength(), i = 0;
-    let updateForCurrent;
     while(len > i) {
       let url = await source.item(i);
       let update = pages[i];
@@ -225,14 +212,7 @@ function init(root) {
         page: i + 1,
         url, current, onPageSelect
       });
-      if(current) {
-        updateForCurrent = update;
-      }
       i++;
-    }
-
-    if(updateForCurrent) {
-      updateForCurrent({ scrollCurrentIntoView: true });
     }
   }
 
