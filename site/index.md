@@ -29,6 +29,8 @@ With a tiny bit of code you can easily embed comics on your site.
 
 &lt;comic-reader&gt; efficiently recycles DOM nodes to ensure that transitioning between pages remains at 60fps.
 
+Click on the right side of the page to navigate forward, then try clicking on the left side of the page to navigate back.
+
 </div>
 <comic-reader id="book1" title="Baffling Mysteries #9"></comic-reader>
 </article>
@@ -36,9 +38,9 @@ With a tiny bit of code you can easily embed comics on your site.
 <article class="feature">
 <div class="description">
 
-### Another
+### Customizable toolbar
 
-and some text
+The reader can be scaled to fit the device's width, height. It can be put into full-screen mode for a dedicated reading experience. The *browse* view lets users navigate pages within the book. Click within the middle of the view to see the toolbar animate in and out.
 
 </div>
 <comic-reader id="book2" title="Whiz Comics #31" controls></comic-reader>
