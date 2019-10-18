@@ -164,7 +164,7 @@ template.innerHTML = /* html */ `
     }
 
     .progress-container.open,
-    #root:not(.first-page-loaded) .cover {
+    #root:not(.first-page-loaded) .cover[src] {
       display: block;
       position: absolute;
       left: 0;
@@ -367,7 +367,7 @@ function init(shadow) {
   }
 
   function setCoverImgNode(value) {
-    coverImgNode.src = value;
+    coverImgNode.setAttribute('src', value);
   }
 
   function setViewerDisplay(cn) {
