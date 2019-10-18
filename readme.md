@@ -90,6 +90,16 @@ This is similar to the `poster` attribute on `<video>` elements.
 <comic-reader src="./path/to/book.cbz" cover="./path/to/cover.jpg"></comic-reader>
 ```
 
+#### controls
+
+Show the top and bottom toolbars. Normally this is controlled by the user clicking within the middle of the image. Setting the boolean `controls` attribute will make these be shown.
+
+```html
+<comic-reader src="./path/to/book.cbz" controls></comic-reader>
+```
+
+The user can still disable the controls by clicking within the middle of the page, this doesn't change that. It just makes them be initially shown (if present in the HTML), or makes them be shown when hidden (if added dynamically).
+
 ### Events
 
 These events are emitted:
