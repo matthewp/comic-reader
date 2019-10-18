@@ -188,17 +188,6 @@ body > footer a {
   font-size: 130%;
 }
 
-comic-reader {
-  height: 417px;
-  width: 300px;
-  justify-self: center;
-}
-
-.demos {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
 /* Medium devices (landscape tablets, 768px and up) */
 @media only screen and (min-width: 768px) {
   .content pre code[class*="language-"] {

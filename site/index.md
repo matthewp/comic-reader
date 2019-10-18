@@ -20,18 +20,35 @@ With a tiny bit of code you can easily embed comics on your site.
 <comic-reader src="https://example.com/whiz-comics-01.cbz"></comic-reader>
 ```
 
-## Demos
-
-<div class="demos">
-  <comic-reader id="book1" title="Baffling Mysteries #9"></comic-reader>
-  <comic-reader id="book2" title="Whiz Comics #31"></comic-reader>
-</div>
-
 ## Features
 
-* Support for Zip (cbz) and RAR (cbr) archives.
+<article class="feature">
+<div class="description">
+
+### Fast, efficient comic reader
+
+&lt;comic-reader&gt; efficiently recycles DOM nodes to ensure that transitioning between pages remains at 60fps.
+
+</div>
+<comic-reader id="book1" title="Baffling Mysteries #9"></comic-reader>
+</article>
+
+<article class="feature">
+<div class="description">
+
+### Another
+
+and some text
+
+</div>
+<comic-reader id="book2" title="Whiz Comics #31"></comic-reader>
+</article>
+
+## More
+
+* Support for __Zip__ (cbz) and __RAR__ (cbr) archives.
 * Load from custom sources like databases or HTTP.
 * Full-screen mode.
-* Browser to jump-ahead within a book.
-* Customizable title bar.
+* Page browser that allows jumping ahead within a book.
+* Customizable areas such as the title bar.
 * Many stylable elements and animations.
