@@ -61,6 +61,9 @@ template.innerHTML = /* html */ `
 
       grid-column: 1;
       margin-left: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .top-pane.show-left {
