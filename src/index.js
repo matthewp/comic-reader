@@ -850,6 +850,7 @@ function init(shadow) {
     if(data.src) setSrc(data.src);
     if(data.page) setPage(data.page - 1);
     if(data.title) setTitle(data.title);
+    if(data.controls) setControlsOpen(data.controls);
     return frag;
   }
 
@@ -863,7 +864,7 @@ const VIEW = Symbol('comic-reader.view');
 
 class ComicReader extends HTMLElement {
   static get observedAttributes() {
-    return ['cover', 'page', 'src', 'title'];
+    return ['cover', 'page', 'src', 'title', 'controls'];
   }
 
   constructor() {
@@ -874,7 +875,8 @@ class ComicReader extends HTMLElement {
   connectedCallback() {
     if(!this[VIEW]) {
       let update = this[VIEW] = init.call(this, this.shadowRoot);
-      let frag = update({ cover: this._cover, src: this._src, page: this._page, title: this._title, backHref: this._backHref });
+      let frag = update({ cover: this._cover, src: this._src, page: this._page,
+        title: this._title, backHref: this._backHref, controls: this._controls });
       this.shadowRoot.appendChild(frag);
     }
     this[VIEW].connect();
@@ -919,10 +921,25 @@ class ComicReader extends HTMLElement {
       this[VIEW]({ page });
   }
 
+  get title() {
+    return this._title;
+  }
+
   set title(title) {
     this._title = title;
     if(this[VIEW])
       this[VIEW]({ title });
+  }
+
+  get controls() {
+    return !!this._controls;
+  }
+
+  set controls(value) {
+    let controls = this._controls = !!(value === '' ? true : value);
+    if(this[VIEW]) {
+      this[VIEW]({ controls });
+    }
   }
 }
 
