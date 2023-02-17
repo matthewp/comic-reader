@@ -1,6 +1,6 @@
-import { Archive } from './libarchive.js/main.js';
+import { Archive } from 'libarchive.js';
 
-let url = new URL('./libarchive.js/dist/worker-bundle.js', import.meta.url).toString();
+let url = new URL('libarchive.js/dist/worker-bundle.js', import.meta.url).toString();
 
 Archive.init({
   workerUrl: url

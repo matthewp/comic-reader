@@ -1,34 +1,13 @@
 {
-  "name": "comic-reader",
-  "version": "0.6.2",
-  "description": "A comic reader web component",
-  "main": "mod.js",
-  "module": "mod.js",
-  "scripts": {
-    "server": "http-server -p 1965",
-    "test": "node-qunit-puppeteer http://localhost:1965/test/test.html 10000"
-  },
-  "files": [
-    "mod.js",
-    "zipsource.js",
-    "browser.js",
-    "libarchive.js"
-  ],
-  "keywords": [
-    "comics",
-    "comic book",
-    "web component"
-  ],
+  "name": "comic-reader-repo",
+  "version": "0.0.0",
+  "description": "Repo package",
   "author": "Matthew Phillips <matthew@matthewphillips.info>",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "@11ty/eleventy": "^0.9.0",
-    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
-    "@matthewp/compile": "^2.0.0",
-    "http-server": "^0.11.1",
-    "libarchive.js": "^1.0.1",
-    "markdown-it": "^10.0.0",
-    "markdown-it-toc-and-anchor": "^4.2.0",
-    "node-qunit-puppeteer": "^1.0.13"
-  }
+    "wireit": "^0.9.5"
+  },
+  "workspaces": [
+    "core"
+  ]
 }

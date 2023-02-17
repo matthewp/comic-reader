@@ -1,4 +1,4 @@
-import '../src/index.js';
+import '../dist/comic-reader.js';
 
 function pad(n) {
   n = n + '';

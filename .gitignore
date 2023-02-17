@@ -1,7 +1,5 @@
 .DS_Store
+.wireit/
 node_modules/
 _site/
-mod.js
-zipsource.js
-browser.js
-libarchive.js
+dist/
