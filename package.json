@@ -22,9 +22,13 @@
   "author": "Matthew Phillips <matthew@matthewphillips.info>",
   "license": "BSD-2-Clause",
   "devDependencies": {
+    "@11ty/eleventy": "^0.9.0",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^2.0.3",
     "@matthewp/compile": "^2.0.0",
     "http-server": "^0.11.1",
     "libarchive.js": "^1.0.1",
+    "markdown-it": "^10.0.0",
+    "markdown-it-toc-and-anchor": "^4.2.0",
     "node-qunit-puppeteer": "^1.0.13"
   }
 }
