@@ -1,0 +1,24 @@
+{
+  "name": "comic-reader-site",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "wireit",
+    "build": "wireit",
+    "preview": "wireit"
+  },
+  "wireit": {
+    "dev": {
+      "command": "astro dev"
+    },
+    "build": {
+      "command": "astro build"
+    },
+    "preview": {
+      "command": "astro preview"
+    }
+  },
+  "dependencies": {
+    "astro": "^2.0.0",
+    "comic-reader": "^0.6.2"
+  }
+}

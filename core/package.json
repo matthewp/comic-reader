@@ -4,19 +4,17 @@
   "description": "A comic reader web component",
   "type": "module",
   "exports": {
-    ".": "./dist/reader.js"
+    ".": "./dist/comic-reader.js"
   },
-  "source": "src/index.js",
+  "source": "src/index.ts",
   "scripts": {
     "build": "wireit",
+    "dev": "wireit",
     "server": "wireit",
     "test": "wireit"
   },
   "files": [
-    "mod.js",
-    "zipsource.js",
-    "browser.js",
-    "libarchive.js"
+    "dist"
   ],
   "keywords": [
     "comics",
@@ -33,13 +31,16 @@
   },
   "wireit": {
     "build": {
-      "command": "microbundle -f modern --no-compress",
+      "command": "microbundle -f modern",
       "files": [
         "src/**/*"
       ],
       "output": [
         "dist/**/*"
       ]
+    },
+    "dev": {
+      "command": "microbundle -f modern --no-compress"
     },
     "server": {
       "command": "serve -p 1938",

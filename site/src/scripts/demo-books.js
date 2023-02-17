@@ -21,5 +21,5 @@ function load(id, c) {
   );
 }
 
-load('#book1', n => `https://clue.world/book-archive/Baffling Mysteries 009/Baffling Mysteries 09_${n}.jpg`);
-load('#book2', n => `https://clue.world/book-archive/Whiz 031/Whiz 031-${n}.jpg`);
+load('#book1', n => `https://cdn.spooky.click/book-archive/Baffling Mysteries 009/Baffling Mysteries 09_${n}.jpg`);
+load('#book2', n => `https://cdn.spooky.click/book-archive/Whiz 031/Whiz 031-${n}.jpg`);
