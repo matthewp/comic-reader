@@ -1,4 +1,5 @@
-import{ type default as PinchZoom } from './zoom.js';
+import { type default as PinchZoom } from './zoom.js';
+import './zoom.js';
 
 const EASE_QUADRATIC = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const EASE_CIRCULAR = 'cubic-bezier(0.1, 0.57, 0.1, 1)';
