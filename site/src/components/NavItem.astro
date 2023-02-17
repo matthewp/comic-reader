@@ -1,0 +1,24 @@
+---
+import { CollectionEntry } from 'astro:content';
+
+export type Props = {
+  page: CollectionEntry<"pages">;
+};
+
+const { page } = Astro.props;
+
+const title = page.data.shortTitle || page.data.title;
+const slug = page.slug === 'index' ? '' : page.slug;
+const pathname = new URL('/' + slug + (slug === '' ? '' : '/'), Astro.url).pathname;
+const isActive = Astro.url.pathname === pathname;
+const liClassName = isActive ? 'active' : '';
+---
+<li class={liClassName}>
+  {
+    isActive ? (
+      <Fragment>{title}</Fragment>
+    ) : (
+      <a href={pathname}>{title}</a>
+    )
+  }
+</li>

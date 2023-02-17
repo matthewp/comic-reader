@@ -332,23 +332,23 @@ function init(shadow) {
   /* DOM variables */
   let host = this;
   let frag = clone();
-  let rootNode = frag.querySelector('#root');
-  let viewerNode = frag.querySelector('#viewer');
-  let controlsNodes = frag.querySelectorAll('.controls');
-  let progressNode = frag.querySelector('progress');
-  let progressContainerNode = frag.querySelector('.progress-container');
-  let coverImgNode = frag.querySelector('.cover');
-  let browserNode = frag.querySelector('.browser');
-  let fitHeightBtn = frag.querySelector('#fit-height');
-  let fitWidthBtn = frag.querySelector('#fit-width');
-  let browseBtn = frag.querySelector('#browse');
-  let titleNode = frag.querySelector('#book-title');
-  let currentPageNode = frag.querySelector('#current-page');
-  let totalPagesNode = frag.querySelector('#total-pages');
-  let topLeftNavSlot = frag.querySelector('slot[name=top-left-nav]');
-  let topPaneNode = frag.querySelector('.top-pane');
-  let fullscreenBtn = frag.querySelector('#fullscreen');
-  let expandNode = fullscreenBtn.firstElementChild;
+  let rootNode = frag.querySelector('#root')!;
+  let viewerNode = frag.querySelector<HTMLElement>('#viewer')!;
+  let controlsNodes = frag.querySelectorAll('.controls')!;
+  let progressNode = frag.querySelector('progress')!;
+  let progressContainerNode = frag.querySelector<HTMLElement>('.progress-container')!;
+  let coverImgNode = frag.querySelector<HTMLElement>('.cover')!;
+  let browserNode = frag.querySelector<HTMLElement>('.browser')!;
+  let fitHeightBtn = frag.querySelector<HTMLElement>('#fit-height')!;
+  let fitWidthBtn = frag.querySelector<HTMLElement>('#fit-width')!;
+  let browseBtn = frag.querySelector<HTMLElement>('#browse')!;
+  let titleNode = frag.querySelector<HTMLElement>('#book-title')!;
+  let currentPageNode = frag.querySelector<HTMLElement>('#current-page')!;
+  let totalPagesNode = frag.querySelector<HTMLElement>('#total-pages')!;
+  let topLeftNavSlot = frag.querySelector<HTMLSlotElement>('slot[name=top-left-nav]')!;
+  let topPaneNode = frag.querySelector<HTMLElement>('.top-pane')!;
+  let fullscreenBtn = frag.querySelector<HTMLElement>('#fullscreen')!;
+  let expandNode = fullscreenBtn.firstElementChild! as HTMLElement;
   let contractNode = contractSVG();
   let readerPageNodes = Array.from(frag.querySelectorAll('comic-reader-page'));
   let currentReaderPageNode = readerPageNodes[0];
@@ -421,7 +421,7 @@ function init(shadow) {
   }
 
   function setCurrentPageNode() {
-    currentPageNode.textContent = currentPage + 1;
+    currentPageNode.textContent = currentPage + 1 as any;
   }
 
   function setFirstPageLoaded() {
@@ -668,7 +668,7 @@ function init(shadow) {
 
     let currentMap = new Map();
     for(let i = 0; i < 5; i++) {
-      let readerPage = viewerNode.children.item(i);
+      let readerPage = viewerNode.children.item(i)! as HTMLElement;
       let pageNumber = Number(readerPage.dataset.page);
       currentMap.set(pageNumber, readerPage);
     }
@@ -676,7 +676,7 @@ function init(shadow) {
     // Now diff
     let i = 0;
     for(let expectedNumber of expectedPages) {
-      let slotReaderPage = viewerNode.children.item(i);
+      let slotReaderPage = viewerNode.children.item(i) as HTMLElement;
       let readerPage = currentMap.get(expectedNumber);
 
       // In the right slot, continue
@@ -694,7 +694,7 @@ function init(shadow) {
       }
       // Find a page we can use
       else {
-        let node = viewerNode.lastElementChild;
+        let node = viewerNode.lastElementChild as HTMLElement;
         while(node) {
           if(!expectedPages.has(Number(node.dataset.page))) {
             readerPage = node;
@@ -702,7 +702,7 @@ function init(shadow) {
             loadInto(expectedNumber, node);
             break;
           }
-          node = node.previousElementSibling;
+          node = node.previousElementSibling as HTMLElement;
         }
       }
 
@@ -849,7 +849,15 @@ function init(shadow) {
   }
   setTopLeftNav();
 
-  function update(data = {}) {
+  type Data = {
+    cover?: string;
+    src?: string;
+    page?: number;
+    title?: string;
+    controls?: boolean;
+  }
+
+  function update(data: Data = {}) {
     if(data.cover) setCover(data.cover);
     if(data.src) setSrc(data.src);
     if(data.page) setPage(data.page - 1);
@@ -864,12 +872,15 @@ function init(shadow) {
   return update;
 }
 
-const VIEW = Symbol('comic-reader.view');
-
 class ComicReader extends HTMLElement {
-  static get observedAttributes() {
-    return ['cover', 'page', 'src', 'title', 'controls'];
-  }
+  #view: ReturnType<typeof init> | undefined;
+  #cover: string | undefined;
+  #src: string | undefined;
+  #page: number | undefined;
+  #controls: boolean | undefined;
+  #title: string | undefined;
+
+  static observedAttributes = ['cover', 'page', 'src', 'title', 'controls'];
 
   constructor() {
     super();
@@ -877,72 +888,77 @@ class ComicReader extends HTMLElement {
   }
 
   connectedCallback() {
-    if(!this[VIEW]) {
-      let update = this[VIEW] = init.call(this, this.shadowRoot);
-      let frag = update({ cover: this._cover, src: this._src, page: this._page,
-        title: this._title, backHref: this._backHref, controls: this._controls });
-      this.shadowRoot.appendChild(frag);
+    if(!this.#view) {
+      let update = this.#view = init.call(this, this.shadowRoot);
+      let frag = update({
+        cover: this.#cover,
+        src: this.#src,
+        page: this.#page,
+        title: this.#title,
+        controls: this.#controls
+      });
+      this.shadowRoot!.appendChild(frag);
     }
-    this[VIEW].connect();
+    this.#view!.connect();
   }
 
   disconnectedCallback() {
-    this[VIEW].disconnect();
+    this.#view!.disconnect();
   }
 
-  attributeChangedCallback(name, _, newVal) {
+  attributeChangedCallback(name: string, _: string, newVal: string) {
     this[name] = newVal;
   }
 
   get cover() {
-    return this._cover;
+    return this.#cover;
   }
 
   set cover(cover) {
-    this._cover = cover;
-    if(this[VIEW]) {
-      this[VIEW]({ cover });
+    this.#cover = cover;
+    if(this.#view) {
+      this.#view({ cover });
     }
   }
 
   get src() {
-    return this._src;
+    return this.#src;
   }
 
   set src(src) {
-    this._src = src;
-    if(this[VIEW])
-      this[VIEW]({ src });
+    this.#src = src;
+    if(this.#view)
+      this.#view({ src });
   }
 
   get page() {
-    return this._page;
+    return this.#page;
   }
 
   set page(page) {
-    this._page = page;
-    if(this[VIEW])
-      this[VIEW]({ page });
+    this.#page = page;
+    if(this.#view)
+      this.#view({ page });
   }
 
   get title() {
-    return this._title;
+    return this.#title as any;
   }
 
   set title(title) {
-    this._title = title;
-    if(this[VIEW])
-      this[VIEW]({ title });
+    this.#title = title;
+    if(this.#view)
+      this.#view({ title });
   }
 
   get controls() {
-    return !!this._controls;
+    return !!this.#controls;
   }
 
-  set controls(value) {
-    let controls = this._controls = !!(value === '' ? true : value);
-    if(this[VIEW]) {
-      this[VIEW]({ controls });
+  set controls(value: boolean | string) {
+    let controls = this.#controls = !!(value === '' ? true : value);
+    if(this.#view) {
+      this.#view({ controls });
     }
   }
 }

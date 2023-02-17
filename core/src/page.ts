@@ -1,4 +1,4 @@
-import './zoom.js';
+import{ type default as PinchZoom } from './zoom.js';
 
 const EASE_QUADRATIC = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const EASE_CIRCULAR = 'cubic-bezier(0.1, 0.57, 0.1, 1)';
@@ -66,14 +66,14 @@ function wait(ms) {
 function init(host) {
   /* DOM variables */
   let frag = clone();
-  let containerNode = frag.querySelector('.container');
-  let canvasNode = frag.querySelector('canvas');
-  let zoomNode = frag.querySelector('comic-reader-zoom');
-  let ctx = canvasNode.getContext('2d');
-  let imgNode;
+  let containerNode = frag.querySelector<HTMLElement>('.container')!;
+  let canvasNode = frag.querySelector<HTMLCanvasElement>('canvas')!;
+  let zoomNode = frag.querySelector('comic-reader-zoom')! as PinchZoom;
+  let ctx = canvasNode.getContext('2d')!;
+  let imgNode: HTMLImageElement | undefined;
 
   /* DOM update functions */
-  function setImg(value) {
+  function setImg(value: HTMLImageElement) {
     if(value !== imgNode) {
       imgNode = value;
       drawCanvas();
@@ -98,12 +98,12 @@ function init(host) {
     await waitOnImg(imgNode);
     await wait(50);
 
-    let w = imgNode.naturalWidth;
-    let h = imgNode.naturalHeight;
+    let w = imgNode!.naturalWidth;
+    let h = imgNode!.naturalHeight;
 
     canvasNode.width = w;
     canvasNode.height = h;
-    ctx.drawImage(imgNode, 0, 0, w, h);
+    ctx.drawImage(imgNode!, 0, 0, w, h);
     setContainerLoaded(true);
     dispatchDraw();
   }
@@ -170,7 +170,11 @@ function init(host) {
     containerNode.removeEventListener('click', onImgClick);
   }
 
-  function update(data = {}) {
+  type Data = {
+    image?: HTMLImageElement;
+  }
+
+  function update(data: Data = {}) {
     if(data.image) setImg(data.image);
     return frag;
   }
@@ -181,28 +185,27 @@ function init(host) {
   return update;
 }
 
-const VIEW = Symbol('view');
-
 class ComicReaderPage extends HTMLElement {
+  #view: ReturnType<typeof init>;
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this[VIEW] = init(this);
+    this.#view = init(this);
   }
 
   connectedCallback() {
-    let update = this[VIEW];
-    if(!this.shadowRoot.firstChild)
-      this.shadowRoot.appendChild(update());
+    let update = this.#view;
+    if(!this.shadowRoot!.hasChildNodes())
+      this.shadowRoot!.append(update());
     update.connect();
   }
 
   disconnectedCallback() {
-    this[VIEW].disconnect();
+    this.#view.disconnect();
   }
 
-  set image(image) {
-    this[VIEW]({ image });
+  set image(image: HTMLImageElement) {
+    this.#view({ image });
   }
 }
 
