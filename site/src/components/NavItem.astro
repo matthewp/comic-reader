@@ -9,7 +9,7 @@ const { page } = Astro.props;
 
 const title = page.data.shortTitle || page.data.title;
 const slug = page.slug === 'index' ? '' : page.slug;
-const pathname = new URL('/' + slug + (slug === '' ? '' : '/'), Astro.url).pathname;
+const pathname = new URL('./' + slug + (slug === '' ? '' : '/'), Astro.site).pathname;
 const isActive = Astro.url.pathname === pathname;
 const liClassName = isActive ? 'active' : '';
 ---
