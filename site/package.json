@@ -11,7 +11,17 @@
       "command": "astro dev"
     },
     "build": {
-      "command": "astro build"
+      "command": "astro build",
+      "dependencies": [
+        "../core:build"
+      ],
+      "files": [
+        "astro.config.mjs",
+        "src/**/*"
+      ],
+      "output": [
+        "dist/**/*"
+      ]
     },
     "preview": {
       "command": "astro preview"
