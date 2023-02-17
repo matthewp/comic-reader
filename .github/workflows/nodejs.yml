@@ -1,4 +1,4 @@
-name: Node CI
+name: Core CI
 
 on: [push]
 
@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [18.x]
 
     steps:
     - uses: actions/checkout@v1
@@ -17,12 +17,11 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Puppeteer Container
-      uses: ianwalter/puppeteer@v2.0.0
-    - name: npm install, build, and test
-      run: |
-        npm install
-        npm run server &
-        npm test
+    - name: Install
+      run: npm ci
+    - name: Build
+      run: npm run --workspace=core build
+    - name: Test
+      run: npm run --workspace=core test
       env:
         CI: true

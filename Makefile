@@ -1,4 +1,5 @@
 COMPILE=node_modules/.bin/compile
+ELEVENTY=node_modules/.bin/eleventy
 
 all: mod.js
 .PHONY: all
@@ -20,3 +21,11 @@ compile: mod.js
 clean:
 	rm -f mod.js zipsource.js browser.js
 .PHONY: clean
+
+site:
+	$(ELEVENTY) --input=site --config=site/.eleventy.js
+.PHONY: site
+
+deploy:
+	aws s3 sync _site s3://code.matthewphillips.info/comic-reader --delete
+.PHONY: deploy

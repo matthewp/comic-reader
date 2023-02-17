@@ -1,0 +1,31 @@
+.feature {
+  margin-bottom: 5rem;
+}
+
+comic-reader {
+  max-width: 100%;
+}
+
+@media only screen and (min-width: 40em) {
+  .feature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .feature:nth-of-type(2) .description {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .feature:nth-of-type(2) comic-reader {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  comic-reader {
+    height: 417px;
+    width: 300px;
+    justify-self: center;
+  }
+}
+
