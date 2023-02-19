@@ -4,11 +4,14 @@
   "description": "A comic reader web component",
   "type": "module",
   "exports": {
-    ".": "./dist/comic-reader.js"
+    ".": "./dist/comic-reader.js",
+    "./customElements": "./custom-elements.json"
   },
   "source": "src/index.ts",
+  "customElements": "./custom-elements.json",
   "scripts": {
     "build": "wireit",
+    "build:manifest": "wireit",
     "dev": "wireit",
     "server": "wireit",
     "test": "wireit"
@@ -24,9 +27,10 @@
   "author": "Matthew Phillips <matthew@matthewphillips.info>",
   "license": "BSD-2-Clause",
   "devDependencies": {
+    "@custom-elements-manifest/analyzer": "^0.6.8",
+    "@matthewp/node-qunit-puppeteer": "^3.0.0",
     "libarchive.js": "^1.0.1",
     "microbundle": "^0.15.1",
-    "@matthewp/node-qunit-puppeteer": "^3.0.0",
     "serve": "^14.2.0"
   },
   "wireit": {
@@ -38,6 +42,9 @@
       "output": [
         "dist/**/*"
       ]
+    },
+    "build:manifest": {
+      "command": "custom-elements-manifest analyze"
     },
     "dev": {
       "command": "microbundle -f modern --no-compress"
