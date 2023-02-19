@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "src/index.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "ComicReader",
+          "members": [
+            {
+              "kind": "field",
+              "name": "cover"
+            },
+            {
+              "kind": "field",
+              "name": "src"
+            },
+            {
+              "kind": "field",
+              "name": "page"
+            },
+            {
+              "kind": "field",
+              "name": "title"
+            },
+            {
+              "kind": "field",
+              "name": "controls"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "cover"
+            },
+            {
+              "name": "page"
+            },
+            {
+              "name": "src"
+            },
+            {
+              "name": "title"
+            },
+            {
+              "name": "controls"
+            }
+          ],
+          "superclass": {
+            "name": "HTMLElement"
+          },
+          "tagName": "comic-reader",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "comic-reader",
+          "declaration": {
+            "name": "ComicReader",
+            "module": "src/index.ts"
+          }
+        }
+      ]
+    }
+  ]
+}
