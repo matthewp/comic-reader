@@ -13,40 +13,71 @@
           "members": [
             {
               "kind": "field",
-              "name": "cover"
+              "name": "cover",
+              "reflects": true,
+              "attribute": "cover"
             },
             {
               "kind": "field",
-              "name": "src"
+              "name": "src",
+              "reflects": true,
+              "description": "Specify an external URL for loading the comic book.",
+              "type": {
+                "text": "string"
+              },
+              "attribute": "src"
             },
             {
               "kind": "field",
-              "name": "page"
+              "name": "page",
+              "reflects": true,
+              "attribute": "page"
             },
             {
               "kind": "field",
-              "name": "title"
+              "name": "title",
+              "reflects": true,
+              "attribute": "title"
             },
             {
               "kind": "field",
-              "name": "controls"
+              "name": "controls",
+              "reflects": true,
+              "description": "Specifies that the controls should be initially open.\nFor example:\n\n```html\n<comic-reader controls></comic-reader>\n```",
+              "type": {
+                "text": "boolean"
+              },
+              "attribute": "controls"
             }
           ],
           "attributes": [
             {
-              "name": "cover"
+              "name": "cover",
+              "fieldName": "cover"
             },
             {
-              "name": "page"
+              "name": "page",
+              "fieldName": "page"
             },
             {
-              "name": "src"
+              "name": "src",
+              "description": "Specify an external URL for loading the comic book.",
+              "type": {
+                "text": "string"
+              },
+              "fieldName": "src"
             },
             {
-              "name": "title"
+              "name": "title",
+              "fieldName": "title"
             },
             {
-              "name": "controls"
+              "name": "controls",
+              "description": "Specifies that the controls should be initially open.\nFor example:\n\n```html\n<comic-reader controls></comic-reader>\n```",
+              "type": {
+                "text": "boolean"
+              },
+              "fieldName": "controls"
             }
           ],
           "superclass": {
@@ -60,6 +91,14 @@
         {
           "kind": "custom-element-definition",
           "name": "comic-reader",
+          "declaration": {
+            "name": "ComicReader",
+            "module": "src/index.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "default",
           "declaration": {
             "name": "ComicReader",
             "module": "src/index.ts"

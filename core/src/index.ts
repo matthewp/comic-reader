@@ -873,11 +873,29 @@ function init(shadow) {
 }
 
 class ComicReader extends HTMLElement {
+  /**
+   * @internal
+   */
   #view: ReturnType<typeof init> | undefined;
+  /**
+   * @internal
+   */
   #cover: string | undefined;
+  /**
+   * @internal
+   */
   #src: string | undefined;
+  /**
+   * @internal
+   */
   #page: number | undefined;
+  /**
+   * @internal
+   */
   #controls: boolean | undefined;
+  /**
+   * @internal
+   */
   #title: string | undefined;
 
   static observedAttributes = ['cover', 'page', 'src', 'title', 'controls'];
@@ -910,6 +928,10 @@ class ComicReader extends HTMLElement {
     this[name] = newVal;
   }
 
+  /**
+   * @attr
+   * @reflect
+   */
   get cover() {
     return this.#cover;
   }
@@ -921,6 +943,11 @@ class ComicReader extends HTMLElement {
     }
   }
 
+  /**
+   * @attr
+   * @reflect
+   * @type {string} Specify an external URL for loading the comic book.
+   */
   get src() {
     return this.#src;
   }
@@ -931,6 +958,10 @@ class ComicReader extends HTMLElement {
       this.#view({ src });
   }
 
+  /**
+   * @attr
+   * @reflect
+   */
   get page() {
     return this.#page;
   }
@@ -941,6 +972,10 @@ class ComicReader extends HTMLElement {
       this.#view({ page });
   }
 
+  /**
+   * @attr
+   * @reflect
+   */
   get title() {
     return this.#title as any;
   }
@@ -951,6 +986,16 @@ class ComicReader extends HTMLElement {
       this.#view({ title });
   }
 
+  /**
+   * @attr
+   * @reflect
+   * @type {boolean} - Specifies that the controls should be initially open.
+   * For example:
+   * 
+   * ```html
+   * <comic-reader controls></comic-reader>
+   * ```
+   */
   get controls() {
     return !!this.#controls;
   }

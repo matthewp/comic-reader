@@ -9,6 +9,8 @@ const pages = await getCollection('pages');
 const { entry } = Astro.props;
 const { Content } = await entry.render();
 const preloadImage = entry.data.preloadImage ?? [];
+
+// https://dribbble.com/shots/15268531-This-Is-Not-The-End
 ---
 <!doctype html>
 <html lang="en">
