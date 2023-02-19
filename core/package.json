@@ -1,6 +1,6 @@
 {
   "name": "comic-reader",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A comic reader web component",
   "type": "module",
   "exports": {
