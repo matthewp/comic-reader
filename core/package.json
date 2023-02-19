@@ -44,7 +44,7 @@
       ]
     },
     "build:manifest": {
-      "command": "custom-elements-manifest analyze"
+      "command": "custom-elements-manifest analyze --globs src/index.ts"
     },
     "dev": {
       "command": "microbundle -f modern --no-compress"
