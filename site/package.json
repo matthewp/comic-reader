@@ -29,6 +29,6 @@
   },
   "dependencies": {
     "astro": "^2.0.0",
-    "comic-reader": "^0.7.0"
+    "comic-reader": "^0.7.1"
   }
 }
